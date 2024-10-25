@@ -1,0 +1,55 @@
+{%extends 'indexnav.html'%}
+
+ 
+{% block indexnav_body %}
+
+<div id="container"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('container').appendChild(renderer.domElement);
+
+    // Set background color
+    scene.background = new THREE.Color(0xeeeeee);
+
+    // Set up lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 7.5);
+    scene.add(directionalLight);
+
+    // Load the floor plan image
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load("{{ url_for('static', filename='assets/img/floorplan.jpg') }}", function(texture) {
+        const floorGeometry = new THREE.PlaneGeometry(50, 33.79);
+        const floorMaterial = new THREE.MeshBasicMaterial({ map: texture });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2; // Rotate to lie flat
+        scene.add(floor);
+    }, undefined, function(error) {
+        console.error('Error loading texture:', error);
+    });
+
+    // Camera settings
+    camera.position.set(25, 20, 50);
+    camera.lookAt(0, 0, 0);
+
+    // Add controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update(); // Update the controls
+        renderer.render(scene, camera);
+    }
+
+    animate();
+</script>
+
+{% endblock %}

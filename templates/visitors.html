@@ -1,0 +1,60 @@
+{% extends 'indexnav.html'%}
+{% block indexnav_body %}
+<main class="main py-5 bg-light">
+  <div class="container">
+    <div class="topspacer"></div>
+    <section id="visitor-form" class="mb-5">
+      <h2 class="text-center mb-4">Submit Visitor Form</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+          <div class="alert alert-dismissible fade show" role="alert">
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endfor %}
+          </div>
+      {% endif %}
+  {% endwith %}
+
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="card border-secondary shadow-sm rounded-3">
+            <div class="card-body">
+              <h5 class="card-title mb-4">Visitor Information</h5>
+              <form method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label for="name" class="form-label">Visitor Name</label>
+                  <input type="text" class="form-control" name="visitor_name" id="visitor_name" placeholder="Visitor Name" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="email" class="form-label">Visitor Email</label>
+                  <input type="email" class="form-control" name="visitor_email" id="visitor_email" placeholder="Visitor Email" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="apartment" class="form-label">Visiting Room</label>
+                  <input type="text" class="form-control" name="visiting_room" id="visiting_room" placeholder="Room Number" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="visit_date" class="form-label">Visit Date</label>
+                  <input type="date" class="form-control" name="visit_date" id="visit_date" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="visit_reason" class="form-label">Visiting Reasons</label>
+                    <textarea class="form-control" name="visit_reason" id="visit_reason" rows="4" placeholder="Describe the details..." required></textarea>
+                </div>
+
+                <div class="text-center mb-3">
+                  <button type="submit" class="btn btn-secondary">Submit Visitor Form</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

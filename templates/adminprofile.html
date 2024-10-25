@@ -1,0 +1,69 @@
+{% extends 'adminnav.html' %}
+
+{% block admin_body %}
+<div class="signupspacer"></div>
+<main class="main py-5"></main>
+<div class="container">
+  <h2 class="mb-4">Admin Profile</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="alert alert-dismissible fade show" role="alert">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+  <!-- Profile Information Form -->
+  <form method="POST">
+    {% if admin_profile %}
+      <div class="mb-3">
+        <label for="admin_name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="admin_name" name="admin_name" value="{{ admin_profile[0]['name'] }}">
+      </div>
+
+      <div class="mb-3">
+        <label for="admin_email" class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="admin_email" name="admin_email" value="{{ admin_profile[0]['email'] }}">
+      </div>
+
+      <div class="mb-3">
+        <label for="admin_address" class="form-label">Address</label>
+        <input type="text" class="form-control" id="admin_address" name="admin_address" value="{{ admin_profile[0]['address'] }}">
+      </div>
+
+      <div class="mb-3">
+        <label for="admin_value" class="form-label">Admin Privileges</label>
+        <input type="text" class="form-control" id="admin_value" name="admin_value" value="{{ admin_profile[0]['uservalue'] }}">
+      </div>
+    {% endif %}
+    
+    <button type="submit" name="admin_changes" class="btn btn-primary">Save Changes</button>
+  </form>
+
+  <hr class="my-4">
+
+  <!-- Change Password Form -->
+  <h3 class="mb-4">Change Password</h3>
+  <form method="POST">
+    <div class="mb-3">
+      <label for="currentPassword" class="form-label">Current Password</label>
+      <input type="password" class="form-control" id="admincurrentPassword" name="admincurrentPassword">
+    </div>
+
+    <div class="mb-3">
+      <label for="newPassword" class="form-label">New Password</label>
+      <input type="password" class="form-control" id="adminnewPassword" name="adminnewPassword">
+    </div>
+
+    <div class="mb-3">
+      <label for="confirmPassword" class="form-label">Confirm New Password</label>
+      <input type="password" class="form-control" id="adminconfirmPassword" name="adminconfirmPassword">
+    </div>
+
+    <button type="submit" name="password_admin" class="btn btn-warning">Change Password</button>
+  </form>
+</div>
+</main>
+{% endblock %}

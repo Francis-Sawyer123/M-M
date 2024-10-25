@@ -1,0 +1,104 @@
+{%extends 'usernav.html'%}
+
+{%block user_body%}
+<main class="main">
+  <div class="topspacer"></div>
+  <div class="container">
+      <h2 class="text-center mb-4">Lease Management</h2>
+
+      <!-- Lease Details Card -->
+      <div class="card mb-4 shadow-sm">
+          <div class="card-body">
+              <h4 class="card-title">Current Lease Details</h4>
+              <p class="card-text">
+                {% if lease_cred %}
+                  <strong>Monthly Rent:</strong> {{lease_cred[0]['monthly']}}<br>
+                  <strong>Lease Start Date:</strong>{{lease_cred[0]['format_lease_start']}}<br>
+                  <strong>Lease End Date:</strong>{{lease_cred[0]['format_lease_end']}}
+              </p>
+                {%else%}
+                    <p>No Data Dispaly.</p>
+                {%endif%}
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#renewLeaseModal">Renew Lease</button>
+          </div>
+      </div>
+
+      <!-- Lease Renewal Form -->
+      <div class="modal fade" id="renewLeaseModal" tabindex="-1" aria-labelledby="renewLeaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="renewLeaseModalLabel">Renew Lease</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="renewLeaseForm" method="post" action="{{ url_for('userlease') }}">
+                        <div class="mb-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="startDate" id="startDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="endDate" id="endDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="month" class="form-label">Monthly Payment</label>
+                            <input type="number" class="form-control" name="mon_pay" id="mon_pay" placeholder="Monthly Payment" required>
+                          </div>
+                          <div class="mb-3">
+                            <label for="downpay" class="form-label">Down Payment</label>
+                            <input type="number" class="form-control" name="downpay" id="downpay" placeholder="Down Payment" required>
+                          </div>
+                        <div class="mb-3">
+                            <label for="comments" class="form-label">Comments</label>
+                            <textarea class="form-control" name="comments" id="comments" rows="3" placeholder="Additional comments or requests"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="renewLeaseForm" class="btn btn-primary">Submit Renewal Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+      <!-- Lease History Table -->
+      <h4 class="mb-3">Lease History</h4>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th scope="col">Monthly Rent</th>
+                  <th scope="col">Start Date</th>
+                  <th scope="col">End Date</th>
+                  <th scope="col">Status</th>
+              </tr>
+          </thead>
+          <tbody>
+            {% if lease_cred and lease_cred|length > 0 %}
+                {% for lease in lease_cred %}
+                    <tr>
+                        
+                        <td>₱{{ lease.monthly|default('N/A') }}</td>
+                        <td>{{ lease.format_lease_start|default('N/A') }}</td>
+                        <td>{{ lease.format_lease_end|default('N/A') }}</td>
+                        <td class="{% if lease.status == 'completed' %}text-success{% elif lease.status == 'pending' %}text-warning{% else %}text-danger{% endif %}">
+                            {{ lease.status|capitalize }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">No lease credentials available.</td>
+                </tr>
+            {% endif %}
+            
+          </tbody>
+      </table>
+  </div>
+</main>
+
+
+
+{%endblock%}

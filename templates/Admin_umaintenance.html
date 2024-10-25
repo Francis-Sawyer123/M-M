@@ -1,0 +1,165 @@
+{% extends 'adminnav.html' %}
+{% block admin_body %}
+<div class="topspacer"></div>
+<main class="main py-5">
+    <div class="container my-4">
+        <h2 class="mb-4">Maintenance Records</h2>
+        <!-- Data Table -->
+        <table id="maintenanceTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Room Number</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Filename</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="maintenance-table-body">
+                <!-- Table rows will be dynamically populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Full Screen Modal -->
+    <div id="imageModal" class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img id="modalImage" src="" alt="Full Screen Image" style="width: 100%; height: auto;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    const staticUrl = "{{ url_for('static', filename='uploads/') }}";
+
+    function loadMaintenance() {
+        $.ajax({
+            url: '/admin/Admin-Maintenance',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(maintenanceData) {
+                console.log(maintenanceData); // Log the received data
+
+                if (!Array.isArray(maintenanceData)) {
+                    console.error('Invalid data format:', maintenanceData);
+                    alert('Received invalid data from server.');
+                    return;
+                }
+
+                const rows = maintenanceData.map((maintenancelisted,counter) => `
+                    <tr>
+                        <td>${counter+1}</td>
+                        <td>${maintenancelisted.roomNumber}</td>
+                        <td>${new Date(maintenancelisted.maintenancedate).toLocaleDateString('en-US', {
+                            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+                        })}</td>
+                        <td>${maintenancelisted.filename ? `<img src="${staticUrl}${maintenancelisted.filename}" class="maintenance-image" alt="Room Image" width="100">` : 'No Image'}</td>
+                        <td>${maintenancelisted.maintenance_issue}</td>
+                        <td>${maintenancelisted.priority}</td>
+                        <td>
+                            <select class="form-select status-select" data-id="${maintenancelisted.maintain_id}" data-room="${maintenancelisted.roomNumber}" data-priority="${maintenancelisted.priority}" data-current-status="${maintenancelisted.status}">
+                                <option value="Pending" ${maintenancelisted.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Completed" ${maintenancelisted.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger delete-maintenance-btn" data-del="${maintenancelisted.maintain_id}">Delete</button>
+                        </td>
+                    </tr>`
+                );
+
+                $('#maintenance-table-body').html(rows.join(''));
+            },
+            error: function(xhr) {
+                console.error('Error fetching maintenance data:', xhr);
+                alert('Error fetching maintenance data: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+            }
+        });
+    }
+
+    loadMaintenance();
+
+    $(document).on('click', '.delete-maintenance-btn', function() {
+        const maintainId = $(this).data('del');
+
+        if (confirm("Are you sure you want to delete this maintenance record?")) {
+            $.ajax({
+                url: '/admin/Admin-Maintenance',
+                type: 'POST',
+                data: {
+                    action: 'delete',
+                    maintain_id: maintainId
+                },
+                success: function(response) {
+                    alert(response.message);
+                    loadMaintenance();
+                },
+                error: function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'An error occurred.'));
+                }
+            });
+        }
+    });
+
+    $(document).on('change', '.status-select', function() {
+        const maintainId = $(this).data('id');
+        const newStatus = $(this).val();
+        const roomNumber = $(this).data('room');
+        const priority = $(this).data('priority');
+        const currentStatus = $(this).data('current-status');
+
+        console.log(`Updating ID: ${maintainId}, New Status: ${newStatus}, Room: ${roomNumber}, Priority: ${priority}, Current Status: ${currentStatus}`);
+
+        $.ajax({
+            url: '/admin/Admin-Maintenance',
+            type: 'POST',
+            data: {
+                action: 'update_maintenance',
+                maintain_id: maintainId,
+                status: newStatus
+            },
+            success: function(response) {
+                alert(response.message);
+                if (newStatus === 'Pending' && priority === 'High') {
+                    alert(`Hey admin, the room ${roomNumber} needs maintenance!`);
+                }
+                $(this).data('current-status', newStatus); 
+            }.bind(this),
+            error: function(xhr) {
+                alert('Error updating status: ' + (xhr.responseJSON?.error || 'An error occurred.'));
+            }
+        });
+    });
+
+    // Click event for images
+    $(document).on('click', '.maintenance-image', function() {
+        const imgSrc = $(this).attr('src');
+        $('#modalImage').attr('src', imgSrc);
+        $('#imageModal').modal('show'); 
+    });
+
+    // Click event to close the modal
+    $(document).ready(function() {
+        $(document).on('click', '#imageModal [data-dismiss="modal"]', function() {
+            $(this).closest('.modal').modal('hide');
+        });
+    });
+    
+    
+});
+</script>
+{% endblock %}

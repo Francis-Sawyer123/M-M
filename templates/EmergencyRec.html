@@ -1,0 +1,150 @@
+{% extends 'adminnav.html' %}
+{% block admin_body %}
+<div class="topspacer"></div>
+<main class="main py-5">
+    <div class="container my-4">
+        <h2 class="mb-4">Emergency Records</h2>
+
+        <!-- Button to trigger modal -->
+        <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#addEmergencyModal">
+            Add Emergency Record
+        </button>
+
+        <!-- Data Table -->
+        <table id="emergencyTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Emergency ID</th>
+                    <th scope="col">Unit Number</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="emergency-table-body"></tbody>
+        </table>
+    </div>
+
+    <!-- Modal for Adding Emergency Record -->
+    <div class="modal fade" id="addEmergencyModal" tabindex="-1" aria-labelledby="addEmergencyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEmergencyModalLabel">Add Emergency Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEmergencyForm">
+                        <div class="mb-3">
+                            <label for="disaster" class="form-label">Disaster Type</label>
+                            <input type="text" class="form-control" id="disaster" name="disaster" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="happen_date" class="form-label">Date of Occurrence</label>
+                            <input type="date" class="form-control" id="happen_date" name="happen_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="Unitroom" class="form-label">Unit Number</label>
+                            <input type="text" class="form-control" id="Unitroom" name="Unitroom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Emergency Record</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    function Load_Emergency() {
+        $.ajax({
+            url: '/admin/Emergency_Records',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(Emergency_data) {
+                if (!Array.isArray(Emergency_data)) {
+                    console.error('Invalid data format:', Emergency_data);
+                    alert('Received invalid data from server.');
+                    return;
+                }
+
+                const rowed = Emergency_data.map((emergency,counted) => `
+                    <tr>
+                        <td>${counted + 1}</td>
+                        <td>${emergency.Unitroom}</td>
+                        <td>${emergency.happen_date}</td>
+                        <td>${emergency.disaster}</td>
+                        <td>${emergency.description}</td>
+                        <td>
+                            <select class="form-select status-select" data-id="${emergency.emergency_id}">
+                                <option value="Pending" ${emergency.status_completion === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Completed" ${emergency.status_completion === 'Completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger delete-emergency-btn" data-id="${emergency.emergency_id}">Delete</button>
+                        </td>
+                    </tr>
+                `);
+                $('#emergency-table-body').html(rowed.join(''));
+            },
+            error: function(xhr) {
+                console.error('Error fetching emergency data:', xhr);
+                alert('Error fetching emergency data: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+            }
+        });
+    }
+
+    Load_Emergency();
+
+    // Add emergency functionality
+$('#addEmergencyForm').on('submit', function(event) {
+    event.preventDefault(); // Prevent form submission
+    const formData = $(this).serialize(); // Serialize form data
+
+    $.post('/admin/Emergency_Records', formData + '&action=add_emergency', function(response) {
+        alert(response.message);
+        $('#addEmergencyForm')[0].reset(); // Reset the form
+        $('#addEmergencyModal').modal('hide'); // Hide the modal
+
+        // Reload the entire page
+        location.reload();
+    }).fail(function(xhr) {
+        alert('Error: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+    });
+});
+
+    // Delete emergency functionality
+    $(document).on('click', '.delete-emergency-btn', function() {
+        const emergencyId = $(this).data('id');
+        $.post('/admin/Emergency_Records', { emergency_id: emergencyId, action: 'delete_emergency' }, function(response) {
+            alert(response.message);
+            Load_Emergency();  // Reload data after delete
+        }).fail(function(xhr) {
+            alert('Error: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+        });
+    });
+
+    // Update status functionality
+    $(document).on('change', '.status-select', function() {
+        const emergencyId = $(this).data('id');
+        const status = $(this).val();
+        $.post('/admin/Emergency_Records', { emergency_id: emergencyId, status_completion: status, action: 'status_comp' }, function(response) {
+            alert(response.message);
+        }).fail(function(xhr) {
+            alert('Error: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,72 @@
+{%extends 'usernav.html'%}
+{%block user_body%}
+<main class="main py-5 bg-light">
+  <div class="container">
+    <div class="topspacer"></div>
+      <section id="maintenance-request" class="mb-5">
+          <h2 class="text-center mb-4">Submit a Maintenance Request</h2>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              <div class="alert alert-dismissible fade show" role="alert">
+                  {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}">{{ message }}</div>
+                  {% endfor %}
+              </div>
+          {% endif %}
+      {% endwith %}
+          <div class="row justify-content-center">
+              <div class="col-md-8 col-lg-6">
+                  <div class="card border-secondary shadow-sm rounded-3">
+                      <div class="card-body">
+                          <h5 class="card-title mb-4">Maintenance Request Form</h5>
+                          <form method="post" enctype="multipart/form-data">
+                            {% for disp in maintenance_data %}
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Your Name</label>
+                                <input type="text" class="form-control" name="maintenance_name" id="maintenance_name" value="{{ disp['name'] }}" placeholder="Your Name" required>
+                            </div>
+                    
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Your Email</label>
+                                <input type="email" class="form-control" name="maintenance_email" id="maintenance_email" value="{{ disp['email'] }}" placeholder="Your Email" required>
+                            </div>
+                    
+                            <div class="mb-3">
+                                <label for="apartment" class="form-label">Apartment Number</label>
+                                <input type="text" class="form-control" name="maintenance_room" id="maintenance_room" value="{{ disp['roomNumber'] }}" placeholder="Room Number" required>
+                            </div>
+                        {% endfor %}
+                            <div class="mb-3">
+                                <label for="maintenance_issue" class="form-label">Maintenance Issue</label>
+                                <textarea class="form-control" name="maintenance_issue" id="maintenance_issue" rows="4" placeholder="Describe the issue in detail..." required></textarea>
+                            </div>
+                        
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority Level</label>
+                                <select class="form-select" name="priority" id="priority" required>
+                                    <option value="" disabled selected>Select priority</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                </select>
+                            </div>
+                        
+                            <div class="mb-3">
+                                <label for="attachments" class="form-label">Attachments</label>
+                                <input class="form-control" type="file" name="attachments" id="attachments" multiple>
+                            </div>
+                        
+                            <div class="text-center mb-3">
+                                <button type="submit" class="btn btn-secondary">Submit Request</button>
+                            </div>
+                        </form>
+                        
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section>
+  </div>
+</main>
+
+{%endblock%}

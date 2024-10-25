@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Emergency Response</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="{{ url_for('static', filename='assets/img/favicon.png') }}" rel="icon">
+  <link href="{{ url_for('static', filename='assets/img/apple-touch-icon.png') }}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{{ url_for('static', filename='assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='assets/vendor/aos/aos.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='assets/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='assets/vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{{ url_for('static', filename='assets/css/main.css') }}" rel="stylesheet">
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <a href="{{url_for('userdashboard')}}" class="logo d-flex align-items-center">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <img src="{{ url_for('static', filename='assets/img/apartment.png') }}" alt="apartment"> 
+        
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{{url_for('userdashboard')}}">Apartment Overview</a></li>
+          <li><a href="{{url_for('usermaintenance')}}">Maintenance</a></li>
+          <li><a href="{{url_for('userlease')}}">Lease Management</a></li>
+          <li><a href="{{url_for('useremergency')}}">Emergency Response</a></li>
+          <li class="dropdown"><a href="javascript:void(0)"><span>Overview</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{{url_for('user_profile')}}">Profile</a></li>
+              <li><a href="{{url_for('index')}}">Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+
+      
+
+
+
+
+
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+
+    </div>
+  </header>
+
+  <main class="main py-5">
+    <section id="emergency-response" class="container mt-5">
+      <h2 class="text-center mb-5">Emergency Response Information</h2>
+
+      <div class="row">
+        <!-- Emergency Contacts -->
+        <div class="col-md-6 mb-4">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/emergency.jpg') }}" class="card-img-top" alt="Emergency Contacts">
+            <div class="card-body">
+              <h4 class="card-title text-danger">Emergency Contacts</h4>
+              <ul class="list-unstyled">
+                <li><strong>Fire Department:</strong> <a href="https://shemaegomez.com/iloilo-city-emergency-hotlines/" class="text-decoration-none">329 5700</a></li>
+                <li><strong>Police Department:</strong> <a href="thttps://shemaegomez.com/iloilo-city-emergency-hotlines/" class="text-decoration-none">323 6002 / 329 7958 / 09985986246</a></li>
+                <li><strong>Hospital:</strong> <a href="https://shemaegomez.com/iloilo-city-emergency-hotlines/" class="text-decoration-none">321-2841 / 321-2536</a></li>
+                <li><strong>WVSUMC (Don Benito):</strong>320-2431</li>
+                <li><strong>St. Paul’s Hospital:</strong>337-2740</li>
+                <li><strong>Emergency Hotline:</strong> <a href="https://shemaegomez.com/iloilo-city-emergency-hotlines/" class="text-decoration-none">337-7317 / 09292874634</a></li>
+                <li><strong>Brgy Hall Sambag Jaro:</strong> +63 (33) 331 2154</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Safety Procedures -->
+        <div class="col-md-6 mb-4">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/yellowsafety.jpg') }}" class="card-img-top" alt="Safety Procedures">
+            <div class="card-body">
+              <h4 class="card-title text-warning">Safety Procedures</h4>
+              <ol class="list-unstyled">
+                <li><strong>Fire:</strong> If you smell smoke or see fire, exit the building immediately and call the Fire Department.</li>
+                <li><strong>Medical Emergency:</strong> Call the hospital or emergency hotline and provide details about the situation.</li>
+                <li><strong>Intruder:</strong> Lock all doors and windows, and contact the Police Department immediately.</li>
+                <li><strong>Natural Disasters:</strong> Follow local authorities' instructions and move to a safe location.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Important Note -->
+        <div class="col-md-12 mb-4">
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">Important Note!</h4>
+            <p>Ensure that you are familiar with the emergency exits in your building. Participate in regular safety drills and keep your emergency contacts updated.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Emergency Kit Checklist -->
+        <div class="col-md-6">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/Checklist.jpg') }}" class="card-img-top" alt="Emergency Kit Checklist">
+            <div class="card-body">
+              <h4 class="card-title text-success">Emergency Kit Checklist</h4>
+              <ul class="list-unstyled">
+                <li><input class="form-check-input me-1" type="checkbox" id="food"> <label for="food">Non-perishable food (3 days' supply)</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="water"> <label for="water">Water (3 days' supply)</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="first-aid"> <label for="first-aid">First Aid Kit</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="flashlight"> <label for="flashlight">Flashlight and Batteries</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="radio"> <label for="radio">Battery-powered Radio</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="medications"> <label for="medications">Medications</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="documents"> <label for="documents">Important Documents</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="clothing"> <label for="clothing">Warm Clothing and Blankets</label></li>
+                <li><input class="form-check-input me-1" type="checkbox" id="bag"> <label for="Bag">Portable Bag</label></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- step by step giude on how to prepare emergency kit -->
+        <div class="col-md-6 mb-4">
+          <div class="card border-info shadow-sm">
+           
+            <div class="card-body">
+              <h4 class="card-title text-warning">Step-by-Step preparing your Emergency Kit</h4>
+              <ol class="list-unstyled">
+                <div class="row">
+                  <!-- Important Note -->
+                  <div class="col-md-12 mb-2">
+                    <div class="alert alert-info" role="alert">
+                      <p>"Preparedness is the key to resilience, ensuring you're ready for the unexpected with the tools and resources needed to protect yourself and your loved ones."</p>
+                    </div>
+                  </div>
+                </div>
+                <li><strong>Step 1: Gather Non-Perishable Food (3 days' supply):</strong> Canned goods, dry food, and packaged meals. Rotate periodically.</li>
+                <li><strong>Step 2: Prepare Water Supply (3 days' supply):</strong> 1 gallon per person per day. Use clean containers or bottled water.</li>
+                <li><strong>Step 3: Assemble a First Aid Kit:</strong> Include bandages, antiseptic wipes, pain relievers, and personal medications.</li>
+                <li><strong>Step 4: Gather a Flashlight and Extra Batteries:</strong> Pack an LED flashlight and extra batteries. Consider a hand-crank option.</li>
+                <li><strong>Step 5: Battery-Powered or Hand-Crank Radio:</strong> Ensure it can receive emergency broadcasts.</li>
+                <li><strong>Step 6: Organize Medications:</strong> Pack a week's supply of daily meds and store in a labeled organizer.</li>
+                <li><strong>Step 7: Collect Important Documents:</strong> Store ID, insurance papers, and contacts in a waterproof container.</li>
+                <li><strong>Step 8: Pack Warm Clothing and Blankets:</strong> Include layers, sturdy shoes, and thermal blankets.</li>
+                <li><strong>Final Step: Pack Everything in a Portable Bag:</strong> Pack everything in a portable bag and check supplies every 6-12 months.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        
+      </div>
+
+    </section>
+  </main>
+
+  <footer id="footer" class="footer light-background">
+
+    <div class="container">
+      <div class="row gy-3">
+        <div class="col-lg-3 col-md-6 d-flex">
+          <i class="bi bi-geo-alt icon"></i>
+          <div class="address">
+            <h4>Address</h4>
+            <p>Brgy. Cagamutan Norte, Leganes</p>
+            <p>Iloilo,Philippines</p>
+            <p></p>
+          </div>
+
+        </div>
+
+        <div class="col-lg-3 col-md-6 d-flex">
+          <i class="bi bi-telephone icon"></i>
+          <div>
+            <h4>Contact</h4>
+            <p>
+              <strong>Phone:</strong> <span>+63 93033333</span><br>
+              <strong>Email:</strong> <span>info@example.com</span><br>
+            </p>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 d-flex">
+          <i class="bi bi-clock icon"></i>
+          <div>
+            <h4>Opening Hours</h4>
+            <p>
+              <strong>Mon-Sat:</strong> <span>6AM - 10PM</span><br>
+            </p>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <h4>Follow Us</h4>
+          <div class="social-links d-flex">
+          
+            <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
+          
+          </div>
+        </div>
+
+      </div>
+    </div>
+   
+
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">M&M Apartment</strong> <span>All Rights Reserved</span></p>
+      <div class="credits">
+        Designed by <p> LineM</p>
+      </div>
+    </div>
+
+
+  </footer>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{{ url_for('static', filename='assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/aos/aos.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/vendor/purecounter/purecounter_vanilla.js') }}"></script>
+
+  <!-- Main JS File -->
+  <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+
+</body>
+
+</html>

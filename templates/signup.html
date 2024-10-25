@@ -1,0 +1,133 @@
+{%extends 'indexnav.html'%}
+{% block indexnav_body %}
+<main class="main">
+  <div class="signupspacer"></div>
+  <section class="vh-100 d-flex justify-content-center align-items-center">
+    <div class="container">     
+      <div class="row g-4 justify-content-center align-items-center">
+        <div class="col-lg-6 col-md-8">
+          <div class="card text-black shadow">
+            <div class="card-body">
+              <h3 class="text-center fw-bold mb-4">Sign Up</h3>
+              {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                  <div class="alert alert-dismissible fade show" role="alert">
+                      {% for category, message in messages %}
+                          <div class="alert alert-{{ category }}">{{ message }}</div>
+                      {% endfor %}
+                  </div>
+              {% endif %}
+          {% endwith %}
+          <form method="POST" action="{{ url_for('authenticated.usersignup') }}" enctype="multipart/form-data">
+            <!-- Name Input Group -->
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" id="signame" name="signame" class="form-control" placeholder="Your Name">
+            </div>
+        
+            <!-- Address Input Area -->
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa-solid fa-address-book"></i></span>
+                <input type="text" id="sigadd" name="sigadd" class="form-control" placeholder="Your Address">
+            </div>
+        
+            <!-- Plate Number Input Area -->
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa-solid fa-car"></i></span>
+                <input type="number" id="platenum" name="platenum" class="form-control" placeholder="Your Vehicle Plate No. (optional)">
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+              <select name="Roomno" id="Roomno" class="form-select">
+                  <option value="Unit1">Unit1</option>
+                  <option value="Unit2">Unit2</option>
+                  <option value="Unit3">Unit3</option>
+                  <option value="Unit4">Unit4</option>
+                  <option value="Unit5">Unit5</option>
+                  <option value="Unit6">Unit6</option>
+                  <option value="Unit7">Unit7</option>
+                  <option value="Unit8">Unit8</option>
+                  <option value="Unit9">Unit9</option>
+                  <option value="Unit10">Unit10</option>
+                  <option value="Unit11">Unit11</option>
+                  <option value="Unit12">Unit12</option>
+                  <option value="Unit13">Unit13</option>
+                  <option value="Unit14">Unit14</option>
+                  <option value="Unit15">Unit15</option>
+                  <option value="Unit16">Unit16</option>
+                  <option value="Unit17">Unit17</option>
+                  <option value="Unit18">Unit18</option>
+                 
+              </select>
+          </div>
+          
+          <!-- Email Input Group -->
+          <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+              <input type="email" id="sigmail" name="sigmail" class="form-control" placeholder="Your Email">
+          </div>
+          
+        
+            <!-- Password Input Group -->
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input id="passwordField" name="passwordField" type="password" class="form-control" placeholder="Your Password">
+                <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
+        
+            <!-- Repeat Password Input Group -->
+            <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input id="RepeatpasswordField" name="RepeatpasswordField" type="password" class="form-control" placeholder="Repeat your Password">
+                <span class="input-group-text" id="RepeattogglePassword" style="cursor: pointer;">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
+
+                <!-- Profile Image Upload -->
+                <div class="input-group mb-3">
+                  <span class="input-group-text"><i class="fas fa-image"></i></span>
+                  <input type="file" id="profileImage" name="profileImage" class="form-control" accept="image/*">
+              </div>
+        
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 col-6 mx-auto">
+                <button type="submit" id="SignupReg" class="btn btn-primary btn-lg">Register</button>
+            </div>
+        </form>
+        <div class="margin-top d-flex justify-content-center gap-2 col-6 mx-auto">
+          <a href="{{url_for('authenticated.userlogin')}}" class="text-center">Already have an Account?</a>
+      </div>
+             
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+  document.getElementById('togglePassword').addEventListener('click', function () {
+      const passwordField = document.getElementById('passwordField');
+      const passwordFieldType = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', passwordFieldType);
+      
+      this.querySelector('i').classList.toggle('fa-eye');
+      this.querySelector('i').classList.toggle('fa-eye-slash');
+  });
+
+  document.getElementById('RepeattogglePassword').addEventListener('click', function () {
+      const repeatPasswordField = document.getElementById('RepeatpasswordField');
+      const repeatPasswordFieldType = repeatPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      repeatPasswordField.setAttribute('type', repeatPasswordFieldType);
+      
+      this.querySelector('i').classList.toggle('fa-eye');
+      this.querySelector('i').classList.toggle('fa-eye-slash');
+  });
+</script>
+
+{%endblock%}
+

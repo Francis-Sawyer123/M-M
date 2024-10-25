@@ -1,0 +1,293 @@
+{% extends 'adminnav.html' %}
+
+{% block admin_body %}
+<div class="topspacer"></div>
+<div class="container my-4">
+  <h2 class="mb-4">Lease Records</h2>
+  
+  <!-- Notification Button -->
+  <button id="notificationButton" class="btn btn-outline-primary position-relative">
+    <i class="fas fa-bell"></i>
+    <span id="unreadCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle" style="display: none;">0</span>
+  </button>
+
+  <div id="leaseRecordsContainer">
+    <table id="leaseTable" class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Tenant</th>
+          <th scope="col">Start Date</th>
+          <th scope="col">End Date</th>
+          <th scope="col">Monthly</th>
+          <th scope="col">Down Payments</th>
+          <th scope="col">Status</th>
+          <th scope="col">Details</th>
+        </tr>
+      </thead>
+      <tbody id="lease-table-body">
+        <!-- Table rows will be dynamically populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Notification Modal -->
+  <div class="modal fade" id="combinedModal" tabindex="-1" aria-labelledby="combinedModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="combinedModalLabel">Notifications</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalBody" style="max-height: 400px; overflow-y: auto;">
+          <!-- Notification messages will be populated here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Detail Modal -->
+  <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true" style="width: 100%; height: 100%; top: 0; left: 0;">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="detailModalLabel">Lease Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="detailModalBody" data-lease-id="">
+          <!-- Details will be populated here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" id="approveButton">Approve</button>
+          <button type="button" class="btn btn-danger" id="declineButton">Decline</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+  // Function to fetch lease data and populate the table
+  function fetchLeaseData() {
+    $.ajax({
+      url: '/admin/Lease_management',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        const leaseTableBody = $('#lease-table-body');
+        leaseTableBody.empty(); // Clear existing data
+        let counter =1;
+        
+        // Populate the table with lease data
+        data.datalease_show.forEach(function(lease) {
+          leaseTableBody.append(`
+            <tr>
+              <td>${counter++}</td>
+              <td>${lease.name}</td>
+              <td>${new Date(lease.lease_start).toLocaleDateString('en-US', {
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric'
+              })}</td>
+              <td>${new Date(lease.lease_end).toLocaleDateString('en-US', {
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric'
+              })}</td>
+              <td>${lease.monthly}</td>
+              <td>${lease.deposite}</td>
+              <td>${lease.status}</td>
+              <td><button class="btn btn-danger delete-lease-btn" data-lease-id="${lease.leaseid}">Delete</button></td>
+            </tr>
+          `);
+        });
+      },
+      error: function() {
+        console.error('Error fetching lease data.');
+      }
+    });
+  }
+
+  // Function to update the notification count and badge visibility
+  function updateNotificationCount() {
+    $.ajax({
+      url: '/admin/Lease_management',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        console.log("Notification Count Data: ", data); // Debugging log
+        const count = data.unreadCount;  
+        
+        // Update badge text and visibility
+        const displayCount = count > 0 ? count : 0; // Show 0 if no notifications
+        $('#unreadCount').text(displayCount).toggle(displayCount > 0); // Show if there are notifications
+
+      },
+      error: function() {
+        console.error('Error fetching notification count.');
+      }
+    });
+  }
+
+  // Click handler for notification button
+  $('#notificationButton').click(function() {
+    $.ajax({
+      url: '/admin/Lease_management',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        let notificationMessages = '';
+
+        if (data.email_recieve.length > 0) {
+          notificationMessages += '<h6>Email Notifications:</h6>';
+          data.email_recieve.forEach(function(mail) {
+            notificationMessages += `<p><a href="javascript:void(0)" class="notification-link" 
+              data-comments="${mail.Comments}" 
+              data-start="${mail.start_date}" 
+              data-end="${mail.end_date}" 
+              data-name="${mail.name}" 
+              data-lease-id="${mail.leaseRec_id}">${mail.name}</a></p>`;
+          });
+        } else {
+          notificationMessages += '<p>No new email notifications.</p>';
+        }
+
+        $('#modalBody').html(notificationMessages);
+        $('#combinedModal').modal('show');
+      },
+      error: function() {
+        $('#modalBody').html('<p>Error fetching notifications.</p>');
+        $('#combinedModal').modal('show');
+      }
+    });
+  });
+
+  // Click handler for the notification link
+  $(document).on('click', '.notification-link', function(e) {
+    e.preventDefault();
+    
+    const comments = $(this).data('comments');
+    const startDate = new Date($(this).data('start')).toLocaleDateString('en-US', {
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric'
+    });
+    const endDate = new Date($(this).data('end')).toLocaleDateString('en-US', {
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric'
+    });
+    const name = $(this).data('name');
+    const leaseId = $(this).data('lease-id');
+
+    $('#detailModalBody').html(`
+      <h5>${name}</h5>
+      <p><strong>Comments:</strong> ${comments}</p>
+      <p><strong>Start Date:</strong> ${startDate}</p>
+      <p><strong>End Date:</strong> ${endDate}</p>
+    `);
+    $('#detailModalBody').data('lease-id', leaseId); // Store lease ID for approval
+    $('#detailModal').modal('show');
+  });
+
+  // Approve button click handler
+  $('#approveButton').click(function() {
+    const leaseId = $('#detailModalBody').data('lease-id');
+    const startDateText = $('#detailModalBody').find('p:contains("Start Date:")').text().split(': ')[1];
+    const endDateText = $('#detailModalBody').find('p:contains("End Date:")').text().split(': ')[1];
+
+    const startDate = new Date(startDateText).toISOString().split('T')[0];
+    const endDate = new Date(endDateText).toISOString().split('T')[0];
+
+    $.ajax({
+      url: '/admin/update_approval',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        lease_id: leaseId,
+        approval_status: true,
+        lease_start: startDate,
+        lease_end: endDate,
+        action: 'approve'
+      }),
+      success: function(response) {
+        alert(response.message);
+        $('#detailModal').modal('hide');
+        $(`.notification-link[data-lease-id="${leaseId}"]`).parent().remove();
+        updateNotificationCount();
+        fetchLeaseData();
+      },
+      error: function(xhr) {
+        alert('Error approving lease: ' + (xhr.responseJSON?.error || 'An error occurred.'));
+      }
+    });
+  });
+
+  // Decline button click handler
+  $('#declineButton').click(function() {
+    const leaseId = $('#detailModalBody').data('lease-id');
+
+    $.ajax({
+      url: '/admin/update_approval',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        lease_id: leaseId,
+        approval_status: false,
+        action: 'decline'
+      }),
+      success: function(response) {
+        alert(response.message);
+        $('#detailModal').modal('hide');
+        $(`.notification-link[data-lease-id="${leaseId}"]`).parent().remove();
+        updateNotificationCount();
+        fetchLeaseData();
+      },
+      error: function(xhr) {
+        alert('Error declining lease: ' + (xhr.responseJSON?.error || 'An error occurred.'));
+      }
+    });
+  });
+
+  // Delete button click handler
+  $(document).on('click', '.delete-lease-btn', function() {
+    const leaseId = $(this).data('lease-id'); 
+
+    if (confirm("Are you sure you want to delete this lease?")) {
+      $.ajax({
+        url: '/admin/update_approval',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          action: 'delete-lease',
+          lease_id: leaseId
+        }),
+        success: function(response) {
+          alert(response.message); // Notify user
+          fetchLeaseData(); // Refresh the lease data
+          updateNotificationCount(); // Update notification count if necessary
+        },
+        error: function(xhr) {
+          alert('Error: ' + (xhr.responseJSON?.error || 'An error occurred.'));
+        }
+      });
+    }
+  });
+
+  // Initialize the notification count and lease data
+  updateNotificationCount();
+  fetchLeaseData();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'usernav.html' %}
+
+{% block user_body %}
+<div class="signupspacer"></div>
+<main class="main py-5"></main>
+<div class="container">
+  <h2 class="mb-4">User Profile</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-dismissible fade show" role="alert">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Profile Information Form -->
+        <form id="profileForm" method="post">
+            {% if profileview %}
+            <div class="row justify-content-center">
+                <div class="col-md-4 d-flex justify-content-center">
+                    <div class="profile-container">
+                        <div class="profile-img text-center">
+                            <img id="profileImage" src="{{ url_for('static', filename='uploads/' + profileview[0]['ProfilePic']) }}" alt="Profile Image" />
+                            <div class="file btn btn-lg btn-primary" onclick="document.querySelector('input[type=file]').click();">
+                                Change Photo
+                                <input type="file" name="file" accept="image/*" style="display: none;" onchange="uploadImage(this)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="profname" class="form-label">Full Name</label>
+                <input type="text" class="form-control" name="profname" id="profname" value="{{ profileview[0]['name'] }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="profemail" class="form-label">Email Address</label>
+                <input type="email" class="form-control" name="profemail" id="profemail" value="{{ profileview[0]['email'] }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="plateno" class="form-label">Plate Number</label>
+                <input type="text" class="form-control" name="plateno" id="plateno" value="{{ profileview[0]['plate_number'] }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="profaddress" class="form-label">Address</label>
+                <input type="text" class="form-control" name="profaddress" id="profaddress" value="{{ profileview[0]['address'] }}" required>
+            </div>
+            {% endif %}
+
+            <button type="submit" name="userUpdate" class="btn btn-primary">Save Changes</button>
+        </form>
+
+        <hr class="my-4">
+
+        <!-- Change Password Form -->
+        <h3 class="mb-4">Change Password</h3>
+        <form method="post">
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">Current Password</label>
+                <input type="password" class="form-control" name="currentPassword" id="currentPassword" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">New Password</label>
+                <input type="password" class="form-control" name="newPassword" id="newPassword" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                <input type="password" class="form-control" name="confirmPassword" id="confirmPassword" required>
+            </div>
+
+            <button type="submit" name="passwordupdate" class="btn btn-primary">Update Password</button>
+        </form>
+    </div>
+</main>
+
+<script>
+    // Handle the image upload using AJAX
+    function uploadImage(input) {
+        if (input.files && input.files[0]) {
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            fetch('/Profile', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update the profile image source to the new uploaded file URL
+                    const img = document.getElementById('profileImage');
+                    img.src = data.file_url;  //returned URL for the new image
+                    alert('Profile image updated successfully!');
+                } else {
+                    alert('Failed to update profile image: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading image:', error);
+                alert('An error occurred while uploading the image.');
+            });
+        }
+    }
+</script>
+{% endblock %}

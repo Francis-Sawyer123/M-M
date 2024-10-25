@@ -1,0 +1,78 @@
+{% extends 'indexnav.html' %}
+
+{% block indexnav_body %}
+<main class="container my-5 pt-5 mt-5">
+    <section id="roomavailable" class="container">
+        <h2 class="text-center mb-5">Room Availability</h2>
+        <div class="row g-2">
+                {% for room in rooms %}
+                    <div class="col-2"> <!-- Added mb-3 for spacing between rows -->
+                        <button type="button" class="btn 
+                            {% if room.RoomNumber in occupied_room_numbers %}bg-danger{% else %}bg-success{% endif %} text-white" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#roomModal" 
+                            data-room-id="{{ room.room_id }}"
+                            data-room-number="{{ room.RoomNumber }}"
+                            data-room-floor="{{ room.room_floor }}"
+                            data-room-size="{{ room.room_size }}"
+                            data-room-img="{{ url_for('static', filename='assets/img/' ~ room.Room_Img) }}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">{{ room.Unit_name }} - {{ room.RoomNumber }}</h5>
+                                    <p class="card-text">{% if room.RoomNumber in occupied_room_numbers %}Occupied{% else %}Available{% endif %}</p>
+                                </div>
+                            
+                        </button>
+                    </div>
+                {% endfor %}
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 300px;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="roomModalLabel">Room Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="roomImage" src="" alt="Room Image" class="img-fluid mb-2" />
+                        <p id="roomDescription"></p>
+                        <p id="roomFloor"></p>
+                        <p id="roomSize"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <!--<button type="button" class="btn btn-primary">Action</button>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Add event listener for modal showing
+    document.addEventListener('DOMContentLoaded', function () {
+        var roomModal = document.getElementById('roomModal');
+        roomModal.addEventListener('show.bs.modal', function (event) {
+            // Button that triggered the modal
+            var button = event.relatedTarget; // Button that triggered the modal
+            
+            // Get data attributes
+            var roomId = button.getAttribute('data-room-id');
+            var roomNumber = button.getAttribute('data-room-number');
+            var roomFloor = button.getAttribute('data-room-floor');
+            var roomSize = button.getAttribute('data-room-size');
+            var roomImg = button.getAttribute('data-room-img');
+
+            // Update the modal's content
+            roomModal.querySelector('.modal-title').textContent = 'Details for ' + roomNumber;
+            roomModal.querySelector('#roomImage').src = roomImg;  // Set the image source
+            roomModal.querySelector('#roomDescription').textContent = 'Room ID: ' + roomId;
+            roomModal.querySelector('#roomFloor').textContent = 'Floor: ' + roomFloor;
+            roomModal.querySelector('#roomSize').textContent = 'Size: ' + roomSize;
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,61 @@
+{%extends 'indexnav.html'%}
+
+{% block indexnav_body %}
+
+<main class="main">
+      <section class="vh-100 d-flex justify-content-center align-items-center">
+        <div class="container">
+          <div class="row g-4 justify-content-center align-items-center">
+            <div class="col-lg-6 col-md-8">
+              <div class="card text-black shadow">
+                <div class="card-body">
+                  <h3 class="text-center fw-bold mb-4">Login as Admin</h3>
+
+                  <form>
+                    <!-- Login Email Input Area -->
+                    <div class="input-group mb-3">
+                      <span class="input-group-text"
+                        ><i class="fas fa-user"></i
+                      ></span>
+                      <input
+                        type="email"
+                        class="form-control"
+                        placeholder="Your Name"
+                      />
+                    </div>
+
+                    <!--Password Input Area-->
+                    <div class="input-group mb-3">
+                      <span class="input-group-text"
+                        ><i class="fas fa-lock"></i
+                      ></span>
+                      <input
+                        id="AdminLoginpasswordField"
+                        type="password"
+                        class="form-control"
+                        placeholder="Your Password"
+                      />
+                      <span
+                        class="input-group-text"
+                        id="AdminLoginPassword"
+                        style="cursor: pointer"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </span>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 col-6 mx-auto">
+                      <button type="button" id="adminlogin" class="btn btn-primary btn-lg">
+                        Login
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+{%endblock%}

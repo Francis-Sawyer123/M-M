@@ -1,0 +1,146 @@
+{% extends 'adminnav.html' %}
+
+{% block admin_body %}
+<div class="signupspacer"></div>
+<main class="container my-5 d-flex justify-content-center align-items-center" style="height: calc(100vh - -20px);">
+    <div class="w-100" style="max-width: 1000px;">
+        <canvas id="engagementChart"></canvas>
+    </div>
+</main>
+
+<div class="container mt-5">
+    <table id="visitorTable" class="display table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Visitor Email</th>
+                <th>Visited Room</th>
+                <th>Visited Date</th>
+                <th>Purposes</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="visitorTableBody">
+            <!-- Rows will be populated here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for Viewing Google Forms Response -->
+<div class="modal fade" id="responseModal" tabindex="-1" aria-labelledby="responseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="responseModalLabel">Response Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Name:</strong> <span id="responseName"></span></p>
+                <p><strong>Visitor Type:</strong> <span id="responseVisitorType"></span></p>
+                <p><strong>Visit Date:</strong> <span id="responseVisitDate"></span></p>
+                <p><strong>Purpose:</strong> <span id="responsePurpose"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="deleteResponseBtn">Delete Response</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Data passed from the backend using Jinja
+    const weeklyLabels = {{ counted_graph | map(attribute='start_date') | map('string') | list | safe }};
+    const weeklyData = {{ counted_graph | map(attribute='weekly_count') | list | safe }};
+
+    // Function to create the engagement chart
+    function createEngagementChart(chartId) {
+        const ctx = document.getElementById(chartId).getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: weeklyLabels, // Use the dates from the query
+                datasets: [{
+                    label: 'Weekly People Engagement',
+                    data: weeklyData, // Use the counts from the query
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    createEngagementChart('engagementChart');
+
+    $(document).ready(function() {
+        // Function to fetch visitor data and populate the table
+        function Callvisitors(){
+            $.ajax({
+                url: '/admin/Visitor-Engagement',
+                type: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(visitor_list) {
+                    if (!Array.isArray(visitor_list)) {
+                        console.error('Invalid data format:', visitor_list);
+                        alert('Received invalid data from the server.');
+                        return;
+                    }
+
+                    const listed_visit = visitor_list.map(list_visit => `
+                        <tr>
+                            <td>${list_visit.visitor_name}</td>
+                            <td>${list_visit.visitor_email}</td>
+                            <td>${list_visit.visited_room}</td>
+                            <td>${list_visit.visited_date}</td>
+                            <td>${list_visit.visit_reason}</td>
+                            <td><button class="btn btn-danger delete-visit" data-del="${list_visit.visit_id}">Delete</button></td>
+                        </tr>
+                    `).join('');
+
+                    $('#visitorTableBody').html(listed_visit);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching visitor data:', error);
+                    alert('Failed to fetch visitor data.');
+                }
+            });
+        }
+
+        // Function to delete a visitor
+        $(document).on('click', '.delete-visit', function() {
+            const visitId = $(this).data('del'); // Get visit_id from the button
+            if (confirm('Are you sure you want to delete this visitor?')) {
+                $.ajax({
+                    url: '/admin/Visitor-Engagement/delete', 
+                    type: 'POST',
+                    data: { visit_id: visitId }, // Send the visit_id as data
+                    success: function(response) {
+                        alert(response.message);
+                        Callvisitors(); // Refresh the visitor list after deletion
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error deleting visitor:', error);
+                        alert('Failed to delete visitor.');
+                    }
+                });
+            }
+        });
+
+        // Call the function to fetch and display visitors data when the document is ready
+        Callvisitors();
+    });
+</script>
+
+{% endblock %}

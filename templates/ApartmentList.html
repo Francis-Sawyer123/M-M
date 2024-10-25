@@ -1,0 +1,260 @@
+{% extends 'adminnav.html' %}
+
+{% block admin_body %}
+<div class="topspacer"></div>
+<main class="main py-5">
+    <div class="container my-4">
+        <h2 class="mb-4">Apartment List</h2>
+        <button class="btn btn-primary button-spacer" id="apartment-btn" data-toggle="modal" data-target="#apartmentModal">Add Apartment</button>
+        <table class="table table-striped" id="apartment-tb">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Unit Name</th>
+                    <th scope="col">Floor</th>
+                    <th scope="col">Room Number</th>
+                    <th scope="col">Size</th>
+                    <th scope="col">Last Inspection</th>
+                    <th scope="col">Condition</th>
+                    <th scope="col">Room Image</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="apartment-table-body"></tbody>
+        </table>
+    </div>
+
+    <!-- Modal for Adding Apartment -->
+    <div class="modal fade" id="apartmentModal" tabindex="-1" role="dialog" aria-labelledby="modalApartment" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalApartment">Add Apartment</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="apartmentForm" enctype="multipart/form-data">
+                        <input type="hidden" name="room_id" id="room_id" />
+                        <div class="form-group">
+                            <label for="Unit_name">Unit Name:</label>
+                            <input type="text" class="form-control" name="Unit_name" id="Unit_name" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="RoomNumber">Room Number:</label>
+                            <input type="text" class="form-control" name="RoomNumber" id="RoomNumber" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="room_floor">Room Floor:</label>
+                            <input type="text" class="form-control" name="room_floor" id="room_floor" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="room_size">Room Size:</label>
+                            <input type="text" class="form-control" name="room_size" id="room_size" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="Room_Img">Room Image:</label>
+                            <input type="file" class="form-control" name="Room_Img" id="Room_Img" accept="image/*" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Last_inspect">Last Inspect:</label>
+                            <input type="date" class="form-control" name="Last_inspect" id="Last_inspect" />
+                        </div>
+                        <div class="form-group">
+                            <label for="condition_status">Condition Status:</label>
+                            <input type="text" class="form-control" name="condition_status" id="condition_status" required />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="save-apartmentbtn">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ <!-- Full Screen Modal -->
+ <div id="imageModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <img id="modalImage" src="" alt="Full Screen Image" style="width: 100%; height: auto;">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+    
+</main>
+
+<!-- Bootstrap and jQuery Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    const staticUrl = "{{ url_for('static', filename='uploads/') }}";
+
+    // Function to Load Apartments
+    function loadApartments() {
+        $.ajax({
+            url: '/admin/Apartments',
+            type: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(apartmentData) {
+                if (!Array.isArray(apartmentData)) {
+                    console.error('Invalid data format:', apartmentData);
+                    alert('Received invalid data from server.');
+                    return;
+                }
+
+                const formatDate = (dateString) => {
+                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', options);
+                };
+
+                const rows = apartmentData.map((apartment,indexing) => `
+                    <tr>
+                        <td>${indexing+1}</td>
+                        <td>${apartment.Unit_name}</td>
+                        <td>${apartment.room_floor}</td>
+                        <td>${apartment.RoomNumber}</td>
+                        <td>${apartment.room_size}</td>
+                        <td>${apartment.Last_inspect ? new Date(apartment.Last_inspect).toLocaleDateString() : 'N/A'}</td>
+                        <td>${apartment.condition_status}</td>
+                        <td>${apartment.Room_Img ? `<img src="${staticUrl}${apartment.Room_Img}" class="maintenance-image" alt="Room Image" width="100">` : 'No Image'}</td>
+                        <td>
+                            <button class="btn btn-danger delete-apartment-btn" data-del="${apartment.room_id}">Delete</button>
+                            <button class="btn btn-warning edit-apartment-btn" data-id="${apartment.room_id}">Edit</button>
+                        </td>
+                    </tr>
+                `);
+                $('.apartment-table-body').html(rows.join(''));
+            },
+            error: function(xhr) {
+                console.error('Error fetching apartments:', xhr);
+                alert('Error fetching apartments: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+            }
+        });
+    }
+
+    // Initial Load
+    loadApartments();
+
+    // Show Add Apartment Modal
+    $("#apartment-btn").click(function() {
+        $('#apartmentModal').modal('show').find('#apartmentForm')[0].reset();
+        $('#room_id').val('');
+        $('#modalApartment').text('Add Apartment');
+    });
+
+    // Show Edit Apartment Modal
+    $(document).on('click', '.edit-apartment-btn', function() {
+        const apartmentId = $(this).data('id');
+        
+        // Fetch the current apartment data
+        $.ajax({
+            url: '/admin/Apartments',
+            type: 'GET',
+            data: { room_id: apartmentId },
+            success: function(apartment) {
+                // Populate the modal with apartment data
+                $('#room_id').val(apartment.room_id);
+                $('#Unit_name').val(apartment.Unit_name);
+                $('#RoomNumber').val(apartment.RoomNumber);
+                $('#room_floor').val(apartment.room_floor);
+                $('#room_size').val(apartment.room_size);
+                $('#Last_inspect').val(apartment.Last_inspect ? new Date(apartment.Last_inspect).toISOString().split('T')[0] : '');
+                $('#condition_status').val(apartment.condition_status);
+
+                // Show the modal
+                $('#modalApartment').text('Edit Apartment');
+                $('#apartmentModal').modal('show');
+            },
+            error: function(xhr) {
+                alert('Error fetching apartment data: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+            }
+        });
+    });
+
+    // Save Apartment (Add or Update)
+    $('#save-apartmentbtn').click(function() {
+        const form = $('#apartmentForm')[0];
+        const formData = new FormData(form);
+        const roomId = $('#room_id').val();
+
+        // Determine action based on the presence of room_id
+        if (roomId) {
+            formData.append('action', 'updateapartment');
+        } else {
+            formData.append('action', 'addapartment');
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/admin/Apartments',
+            data: formData,
+            contentType: false,  
+            processData: false,  
+            success: function(response) {
+                $('#apartmentModal').modal('hide');
+                loadApartments();
+                alert(response.message);
+            },
+            error: function(xhr) {
+                console.error('Error saving apartment:', xhr);
+                alert('Error saving apartment: ' + (xhr.responseJSON?.message || 'An error occurred.'));
+            }
+        });
+    });
+
+    // Delete Apartment
+    $(document).on('click', '.delete-apartment-btn', function() {
+    const roomId = $(this).data('del'); // Get the room ID from the button's data attribute
+
+    if (confirm("Are you sure you want to delete this apartment?")) {
+        $.ajax({
+            url: '/admin/Apartments', 
+            type: 'POST', // POST request for form submission
+            data: {
+                action: 'deleteapartment', 
+                room_id: roomId // Pass the room_id
+            },
+            success: function(response) {
+                alert(response.message); // Show success message
+                loadApartments(); // Reload the apartment list
+            },
+            error: function(xhr) {
+                alert('Error: ' + (xhr.responseJSON?.error || 'An error occurred.')); // Handle errors
+            }
+        });
+    }
+    });
+
+
+    // Click event for images
+$(document).on('click', '.maintenance-image', function() {
+  const imgSrc = $(this).attr('src');
+  $('#modalImage').attr('src', imgSrc);
+  $('#imageModal').modal('show'); 
+});
+
+$(document).ready(function() {
+        $(document).on('click', '#apartmentModal [data-dismiss="modal"]', function() {
+            $(this).closest('.modal').modal('hide');
+        });
+    });
+
+
+$(document).ready(function() {
+        $(document).on('click', '#imageModal [data-dismiss="modal"]', function() {
+            $(this).closest('.modal').modal('hide');
+        });
+    });
+
+});
+$('#apartment-tb').DataTable();
+
+</script>
+
+{% endblock %}

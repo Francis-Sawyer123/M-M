@@ -1,0 +1,266 @@
+{% extends 'indexnav.html'%}
+
+
+{% block indexnav_body %}
+<main class="main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+          <div class="alert alert-dismissible fade show" role="alert">
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endfor %}
+          </div>
+      {% endif %}
+    {% endwith %}
+    <!-- Hero Section iya ka ga hulag nga pic sa home-->
+    <section id="hero" class="hero section dark-background">
+
+      <div id="hero-carousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+
+        <div class="carousel-item active">
+          <img src="{{ url_for('static', filename='assets/img/apartment1.jpg') }}" alt="">
+          <div class="carousel-container">
+            <div>
+              <p>COMFORTABLE</p>
+              <h2><span></span> M & M Apartment</h2>
+              <a href="{{url_for('authenticated.usersignup')}}" class="btn-get-started">Sign Up</a>
+            </div>
+          </div>
+        </div><!-- End Carousel Item -->
+
+        <div class="carousel-item">
+          <img src="{{ url_for('static', filename='assets/img/apartment2.jpg') }}" alt="">
+          <div class="carousel-container">
+            <div>
+              <p>AFFORTABLE</p>
+              <h2><span></span> M & M Apartment</h2>
+              <a href="{{url_for('authenticated.usersignup')}}" class="btn-get-started">SIGN UP</a>
+            </div>
+          </div>
+        </div><!-- End Carousel Item -->
+
+        <div class="carousel-item">
+          <img src="{{ url_for('static', filename='assets/img/apartment3.jpg') }}" alt="">
+          <div class="carousel-container">
+            <div>
+              <p>ACCOMODATING</p>   
+              <h2><span></span> M & M Apartment</h2>
+              <a href="{{url_for('authenticated.usersignup')}}" class="btn-get-started">SIGN UP</a>
+            </div>
+          </div>
+        </div><!-- End Carousel Item -->
+
+        <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
+        </a>
+
+        <a class="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next">
+          <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
+        </a>
+
+        <ol class="carousel-indicators"></ol>
+
+      </div>
+
+    </section><!-- /Hero Section -->
+
+    <div class="text-center mt-5">
+      <img src="{{ url_for('static', filename='assets/img/frame.png') }}" alt="QR Code" class="qr-image">
+      <p class="mt-3">Scan this QR code for visitors to register their entry.</p>
+      <p>Please use your smartphone camera or a QR code scanning app to scan the code.</p>
+      <p>This will direct you to the visitor registration form where you can provide your details and the purpose of your visit.</p>
+      <p>Thank you for helping us maintain a secure and organized visiting process!</p>
+  </div>
+
+    <!--Ameneties-->
+    <section id="amenities" class="container">
+      <h2 class="text-center mb-5">Our Amenities</h2>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        
+        <!-- Security Cameras-->
+        <div class="col">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/CCTV.jpg') }}" class="card-img-top custom-img-size" alt="Gym">
+            <div class="card-body text-center">
+              <i class="bi bi-webcam display-4 text-secondary mb-3"></i>
+              <h3 class="card-title mb-3">Security Camera</h3>
+              <p class="card-text">Security cameras are available 24/7 to ensure the safety and security of all residents.</p>
+              <a href="#" class="btn btn-secondary">Learn More</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Serene area -->
+        <div class="col">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/peaceful.jpg') }}" class="card-img-top" alt="Swimming Pool">
+            <div class="card-body text-center">
+              <i class="bi bi-cloud-sun display-4 text-secondary mb-3"></i>
+              <h3 class="card-title mb-3">Serene Area</h3>
+              <p class="card-text">A peaceful area with minimal disturbance, providing a calm environment.</p>
+              <a href="#" class="btn btn-secondary">Learn More</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Lounge -->
+        <div class="col">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/LougeArea.png') }}" class="card-img-top" alt="Lounge Area">
+            <div class="card-body text-center">
+              <i class="bi bi-house-door display-4 text-secondary mb-3"></i>
+              <h3 class="card-title mb-3">Lounge Area</h3>
+              <p class="card-text">A comfortable lounge area for socializing and relaxation.</p>
+              <a href="#" class="btn btn-secondary">Learn More</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Conference Room -->
+        <div class="col">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/conference.jpg') }}" class="card-img-top" alt="Conference Room">
+            <div class="card-body text-center">
+              <i class="bi bi-file-earmark-text display-4 text-secondary mb-3"></i>
+              <h3 class="card-title mb-3">Conference Room</h3>
+              <p class="card-text">Fully equipped conference room for meetings and events.</p>
+              <a href="#" class="btn btn-secondary">Learn More</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Parking -->
+        <div class="col">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/Parking.png') }}" class="card-img-top" alt="Parking">
+            <div class="card-body text-center">
+              <i class="bi bi-car-front display-4 text-secondary mb-3"></i>
+              <h3 class="card-title mb-3">Parking</h3>
+              <p class="card-text">Secure parking facilities with ample space for residents.</p>
+              <a href="#" class="btn btn-secondary">Learn More</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Smoe Free -->
+        <div class="col">
+          <div class="card border-secondary shadow-sm">
+            <img src="{{ url_for('static', filename='assets/img/smoke-free1.jpg') }}" class="card-img-top" alt="Garden">
+            <div class="card-body text-center">
+              <i class="bi bi-ban display-4 text-secondary mb-3"></i>
+              <h3 class="card-title mb-3">Smoke-Free</h3>
+              <p class="card-text">Enjoy fresh air and a healthy living in our smoke-free community.</p>
+              <a href="#" class="btn btn-secondary">Learn More</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Our Services</h2>
+        <p>Experience the comfort of modern living in a peaceful, well-maintained environment. Our apartments offer a perfect blend of convenience and serenity and to meet your every need.</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="service-item  position-relative">
+              <div class="icon">
+                <i class="bi bi-car-front-fill"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Secure Parking</h3>
+              </a>
+              <p>Experience peace of mind with our secure parking facility, featuring 24/7 surveillance, dedicated security staff, and advanced access controls. Enjoy unparalleled safety and convenience—trust us to protect your vehicle while you go about your day!</p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="service-item position-relative">
+              <div class="icon">
+                <i class="bi bi-person"></i>
+              </div>
+              <a href="javascript:void(0)" class="stretched-link">
+                <h3>Monitored Visitors</h3>
+              </a>
+              <p>Enhance your security with our monitored visitor service, featuring real-time screening and secure access. Enjoy peace of mind with vigilant oversight and sytem managing all visitor activity.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="service-item position-relative">
+              <div class="icon">
+                <i class="bi bi-bank"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Guarantee Plans</h3>
+              </a>
+              <p>Experience ultimate peace of mind with our comprehensive guarantee plans, offering exceptional coverage and reliable support. Rest easy knowing your needs are fully backed and protected.
+              </p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+            <div class="service-item position-relative">
+              <div class="icon">
+                <i class="bi bi-exclamation-diamond-fill"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Prior Safety</h3>
+              </a>
+              <p>Prioritizing and addressing safety measures before potential risks arise.</p>
+              <a href="javascript:void(0)" class="stretched-link"></a>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+            <div class="service-item position-relative">
+              <div class="icon">
+                <i class="bi bi-tree-fill"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Well Maintenance</h3>
+              </a>
+              <p>Enjoy flawless upkeep with our expert maintenance services, ensuring your property remains in perfect condition with meticulous care and attention to detail.</p>
+              <a href="javascript:void(0)" class="stretched-link"></a>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+            <div class="service-item position-relative">
+              <div class="icon">
+                <i class="bi bi-lock-fill"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Assurance Services</h3>
+              </a>
+              <p>Discover unmatched confidence with our premium assurance services, offering expert solutions and reliable support to safeguard your interests and enhance your experience.</p>
+              <a href="#" class="stretched-link"></a>
+            </div>
+          </div><!-- End Service Item -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Services Section -->
+
+  
+    
+          
+   
+    
+
+    
+
+  </main>
+
+{% endblock %}

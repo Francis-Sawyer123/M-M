@@ -1,0 +1,82 @@
+{% extends 'adminnav.html' %}
+
+{% block admin_body %}
+<div class="topspacer"></div>
+<div class="container mt-5">
+    <header>
+        <h2>Admin Dashboard</h2>
+        <button id="add-btn" class="btn btn-primary mb-3">Add User</button>
+    </header>
+    <table id="user-table" class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Plate Number</th>
+                <th>Room Number</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="user-body">
+            <!-- User data will be injected here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- User Modal -->
+<div class="modal fade" id="user-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">User Modal</h5>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Form content will be injected here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-btn">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Utilities Modal -->
+<div class="modal fade" id="utilities-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="utilities-modal-label">Manage User</h5>
+            </div>
+            <div class="modal-body" id="modal-body-utilities">
+                <!-- Utilities form content will be injected here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-utilities-btn">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full Screen Image Modal -->
+<div class="modal fade" id="image-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Profile Picture</h5>
+            </div>
+            <div class="modal-body text-center">
+                <img id="full-image" src="" alt="Full Size Profile Picture" style="width: 100%; height: auto;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

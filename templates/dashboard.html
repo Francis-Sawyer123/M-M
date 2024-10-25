@@ -1,0 +1,97 @@
+{%extends 'usernav.html'%}
+
+{%block user_body%}
+<main class="main py-5 bg-light">
+    <!-- Optional content or spacing above -->
+    <div id="additional-content" class="container mb-5"></div>
+  
+    <section id="apartment-overview" class="container">
+      <div class="row">
+        <!-- Apartment Details Card -->
+        <div class="col-md-6 mb-4">
+          <div class="card border-primary shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h5 class="card-title mb-0">Apartment Details</h5>
+            </div>
+            {% if room_details %}
+            <h2>Room Information</h2>
+            <img src="{{ url_for('static', filename='assets/img/' ~ room_details['Room_Img']) }}" alt="Room Image">
+            <p><strong>Room ID:</strong> {{ room_details['room_id'] }}</p>
+            <p><strong>Unit Name:</strong> {{ room_details['Unit_name'] }}</p>
+            <p><strong>Room Floor:</strong> {{ room_details['room_floor'] }}</p>
+            <p><strong>Room Size:</strong> {{ room_details['room_size'] }}</p>
+        {% else %}
+            <p>No room occupied.</p>
+        {% endif %}
+
+          </div>
+        </div>
+  
+        <!-- Lease Information Card -->
+        <div class="col-md-6 mb-4">
+          <div class="card border-success shadow-sm">
+            <div class="card-header bg-success text-white">
+              <h5 class="card-title mb-0">Lease Information</h5>
+            </div>
+            <div class="card-body">
+              {% if lease_data and lease_data|length > 0 %}
+              <h6 class="card-subtitle mb-2 text-muted">{{ lease_data[0]['leaseTerm'] }}</h6>
+              <p class="card-text">
+                  <strong>Lease Start Date:</strong> {{ lease_data[0]['formatted_lease_start'] }}<br>
+                  <strong>Lease End Date:</strong> {{ lease_data[0]['formatted_lease_end'] }}<br>
+                  <strong>Monthly Rent:</strong> {{ lease_data[0]['monthly'] }}<br>
+                  <strong>Security Deposit:</strong> {{ lease_data[0]['deposite'] }}
+              </p>
+          {% else %}
+              <p>No lease data available.</p>
+          {% endif %}          
+            </div>
+          </div>
+        </div>
+  
+        <!-- Utilities and Amenities Card -->
+        <div class="col-md-12 mb-4">
+          <div class="card border-info shadow-sm">
+            <div class="card-header bg-info text-white">
+              <h5 class="card-title mb-0">Utilities and Amenities</h5>
+            </div>
+            <div class="card-body">
+              <ul class="list-unstyled">
+                {% if utils and utils|length > 0 %}
+                <li><i class="bi bi-check-circle text-success"></i> <strong>Water:</strong>{{utils[0]['water_status']}}</li>
+                <li><i class="bi bi-check-circle text-success"></i> <strong>Electricity:</strong>{{utils[0]['electricity_status']}}</li>
+                <li><i class="bi bi-check-circle text-success"></i> <strong>Internet:</strong>{{utils[0]['internet_status']}}</li>
+                <li><i class="bi bi-check-circle text-success"></i> <strong>Parking:</strong>{{utils[0]['parking_status']}}</li>
+                {%endif%}
+              </ul>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Contact Information Card -->
+        <div class="col-md-12 mb-4">
+          <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white">
+              <h5 class="card-title mb-0">Facilitator Information</h5>
+            </div>
+            <div class="card-body">
+              <p class="card-text">
+                <strong>Property Owner:</strong> Modesta Monico<br>
+                <strong>Property Manager:</strong> Rogelio Monico Jr.<br>
+                <strong>Phone:</strong> <a href="tel:+63 9282610509">0928-261-0509</a><br>
+                <strong>Email:</strong> <a href="rogeliomonicojrr@gmail.com">rogeliomonicojrr@gmail.com</a><br>
+                <strong>Office Hours:</strong> Mon-Fri 9AM - 5PM
+              </p>
+            </div>
+          </div>
+        </div>
+        <p>
+          If you have a visitor, please refer them to the following link for more information: 
+          <a class="text-primary" href="#">Visitor Refers</a>. 
+          We appreciate your cooperation and hope to make their experience enjoyable. 
+          If you have any questions, feel free to reach out!
+      </p>
+      </div>
+    </section>
+  </main>
+{%endblock%}
