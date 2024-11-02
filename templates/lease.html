@@ -11,14 +11,21 @@
           <div class="card-body">
               <h4 class="card-title">Current Lease Details</h4>
               <p class="card-text">
-                {% if lease_cred %}
-                  <strong>Monthly Rent:</strong> {{lease_cred[0]['monthly']}}<br>
-                  <strong>Lease Start Date:</strong>{{lease_cred[0]['format_lease_start']}}<br>
-                  <strong>Lease End Date:</strong>{{lease_cred[0]['format_lease_end']}}
-              </p>
-                {%else%}
-                    <p>No Data Dispaly.</p>
-                {%endif%}
+                <div>
+                    {% if lease_cred %}
+                        <strong>Monthly Rent:</strong> {{ lease_cred[0]['monthly'] }}<br>
+                        <strong>Lease Start Date:</strong> {{ lease_cred[0]['format_lease_start'] }}<br>
+                        <strong>Lease End Date:</strong> {{ lease_cred[0]['format_lease_end'] }}<br>
+                        <strong>Total Month:</strong> {{ lease_cred[0]['addmonth'] }}<br>
+                        <strong>Water:</strong> {{ lease_cred[0]['water_cost'] }}<br>
+                        <strong>Electricity:</strong> {{ lease_cred[0]['electricity_cost'] }}<br>
+                        <strong>Internet:</strong> {{ lease_cred[0]['internet_cost'] }}<br>
+                        <strong>Utility Cost:</strong> {{ lease_cred[0]['total_utilities_cost'] }}<br>
+                        <strong>Overall Cost:</strong> {{ lease_cred[0]['overall_cost'] }}<br>
+                    {% else %}
+                        <p>No Data Display.</p>
+                    {% endif %}
+                </div>
               <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#renewLeaseModal">Renew Lease</button>
           </div>
       </div>
@@ -35,7 +42,7 @@
                     <form id="renewLeaseForm" method="post" action="{{ url_for('userlease') }}">
                         <div class="mb-3">
                             <label for="startDate" class="form-label">Start Date</label>
-                            <input type="date" class="form-control" name="startDate" id="startDate" required>
+                            <input type="date" class="form-control" name="startDate" id="startDate" value="{{today}}" required>
                         </div>
                         <div class="mb-3">
                             <label for="endDate" class="form-label">End Date</label>
@@ -51,7 +58,7 @@
                           </div>
                         <div class="mb-3">
                             <label for="comments" class="form-label">Comments</label>
-                            <textarea class="form-control" name="comments" id="comments" rows="3" placeholder="Additional comments or requests"></textarea>
+                            <textarea class="form-control" name="comments" id="comments" rows="3" placeholder="Additional comments or request for adding Utility"></textarea>
                         </div>
                     </form>
                 </div>
@@ -79,22 +86,37 @@
             {% if lease_cred and lease_cred|length > 0 %}
                 {% for lease in lease_cred %}
                     <tr>
-                        
                         <td>₱{{ lease.monthly|default('N/A') }}</td>
                         <td>{{ lease.format_lease_start|default('N/A') }}</td>
                         <td>{{ lease.format_lease_end|default('N/A') }}</td>
-                        <td class="{% if lease.status == 'completed' %}text-success{% elif lease.status == 'pending' %}text-warning{% else %}text-danger{% endif %}">
+                        <td class="{% if lease.status == 'Approved' %}text-success{% elif lease.status == 'Pending' %}text-warning{% endif %}">
                             {{ lease.status|capitalize }}
                         </td>
                     </tr>
+                    {# Check for lease requests related to the current lease #}
+                    {% if lease_req and lease_req|length > 0 %}
+                        {% for req in lease_req %}
+                            <tr>
+                                <td>₱{{ req.monthly|default('N/A') }}</td>
+                                <td>{{ req.start_date|default('N/A') }}</td>
+                                <td>{{ req.end_date|default('N/A') }}</td>
+                                <td class="{% if req.approval == 'Approved' %}text-success{% elif req.approval == 'Pending' %}text-warning{% endif %}">
+                                    {{ req.approval|capitalize }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">No lease requests available.</td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="5" class="text-center">No lease credentials available.</td>
+                    <td colspan="8" class="text-center">No lease credentials available.</td>
                 </tr>
             {% endif %}
-            
-          </tbody>
+        </tbody>
       </table>
   </div>
 </main>

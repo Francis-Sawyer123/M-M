@@ -1,5 +1,6 @@
 from flask import Flask,render_template,session,redirect,url_for,request,flash,jsonify
 import os
+import re
 from admin import admins
 from auth import authenticated
 from datetime import datetime,timedelta,date
@@ -8,8 +9,11 @@ from flask_session import Session
 import pymysql.cursors
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+import logging
 
 secret_key=os.urandom(10)
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 conn=pymysql.connect(host='localhost',
                     user="root",
@@ -38,9 +42,14 @@ app.register_blueprint(authenticated, url_prefix='')
 Session(app)
 
 
-
+def is_valid_contact(contact):
+    pattern = re.compile(r'^\+?\d{11,12}$')
+    return pattern.match(contact) is not None
 
 #index area or home area
+@app.route("/terms&Condition")
+def terms():
+    return render_template('terms.html')
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -74,8 +83,7 @@ def apartmentplan():
 
     return render_template('floorplan.html')
 
-#user logged in area
-@app.route('/Dashboard')
+@app.route('/Dashboard', methods=['GET', 'POST'])
 def userdashboard():
     session.permanent = True
     login_id = session.get('user_id')
@@ -83,74 +91,134 @@ def userdashboard():
         return redirect(url_for('authenticated.userlogin'))
 
     established = conn.cursor()
-    established.execute('SELECT roomNumber FROM apartmentsingup WHERE userid = %s', (login_id,))
-    its_occupied = established.fetchone()
-    print("sa room number",its_occupied)
-
-    if its_occupied:
-        room_number = its_occupied['roomNumber']
-        
-        # Create a new cursor for the next query
-        established.execute('''
-            SELECT room_id, Unit_name, room_floor, room_size, Room_Img 
-            FROM room_avail 
-            WHERE RoomNumber = %s
-        ''', (room_number,))
-        room_details = established.fetchone()
-        print("sa room details",room_details)
-    else:
-        room_details = None
     
+    try:
+    # Fetch room details if assigned to a room
+        established.execute('SELECT roomNumber FROM apartmentsingup WHERE userid = %s', (login_id,))
+        its_occupied = established.fetchone()
+        print("Room number data:", its_occupied)
 
-    established.execute( """
-SELECT 
-    leaseid, 
-    DATE_FORMAT(lease_start, '%%m/%%d/%%Y') AS formatted_lease_start, 
-    DATE_FORMAT(lease_end, '%%m/%%d/%%Y') AS formatted_lease_end, 
-    monthly, 
-    deposite, 
-    status 
-FROM 
-    lease_inform 
-WHERE 
-    login_id = %s;
+        room_details = None
+        if its_occupied:
+            room_number = its_occupied['roomNumber']
+            # Fetch room details
+            established.execute('''SELECT room_id, Unit_name, room_floor, room_size, Room_Img 
+                                FROM room_avail 
+                                WHERE RoomNumber = %s''', (room_number,))
+            room_details = established.fetchone()
+            print("Room details data:", room_details)
+
+    # Fetch lease data
+        established.execute("""
+    SELECT 
+        DATE_FORMAT(lease.lease_start, '%%m/%%d/%%Y') AS format_lease_start,
+        DATE_FORMAT(lease.lease_end, '%%m/%%d/%%Y') AS format_lease_end,
+        TIMESTAMPDIFF(MONTH, lease.lease_start, lease.lease_end) AS addmonth,
+        lease.monthly,
+        lease.status,
+        lease.deposite,
+        CASE WHEN utilities.water = 1 THEN 200 ELSE 0 END AS water_cost,
+        CASE WHEN utilities.electricity = 1 THEN 500 ELSE 0 END AS electricity_cost,
+        CASE WHEN utilities.internet = 1 THEN 300 ELSE 0 END AS internet_cost,
+        lease.monthly + 
+        (CASE WHEN utilities.water = 1 THEN 200 ELSE 0 END +
+         CASE WHEN utilities.electricity = 1 THEN 500 ELSE 0 END +
+         CASE WHEN utilities.internet = 1 THEN 300 ELSE 0 END) AS overall_cost,
+        DATE_FORMAT(DATE_ADD(lease.lease_start, INTERVAL 1 MONTH), '%%m/%%d/%%Y') AS next_payment_date,
+        lease.monthly + 
+        (CASE WHEN utilities.water = 1 THEN 200 ELSE 0 END +
+         CASE WHEN utilities.electricity = 1 THEN 500 ELSE 0 END +
+         CASE WHEN utilities.internet = 1 THEN 300 ELSE 0 END) AS total_next_payment_cost
+    FROM 
+        lease_inform lease
+    LEFT JOIN 
+        utilities ON lease.login_id = utilities.login_id
+    WHERE 
+        lease.login_id = %s;
 """, (login_id,))
 
-    # Fetch all data
-    lease_data = established.fetchall()
-    print("sa Lease Data",lease_data)
 
-    established.execute('''SELECT 
-    utilitiesid, 
-    CASE 
-        WHEN water = 1 THEN 'Included'
-        ELSE 'Not Included'
-    END AS water_status,
-    CASE 
-        WHEN electricity = 1 THEN 'Included'
-        ELSE 'Not Included'
-    END AS electricity_status,
-    CASE 
-        WHEN parking = 1 THEN 'Reserved 1 Slot'
-        ELSE 'Not Included'
-    END AS parking_status,
-    CASE 
-        WHEN internet = 1 THEN 'Included'
-        ELSE 'Not Included'
-    END AS internet_status
-FROM 
-    utilities 
-WHERE 
-    login_id=%s''',(login_id,))
-    utils=established.fetchall()
+        
+        lease_data = established.fetchall()
+        print("Lease Data:", lease_data)
 
-    print("sa utils",utils)
+        # Fetch utility data
+        established.execute(''' 
+            SELECT 
+                utilitiesid, 
+                CASE WHEN water = 1 THEN 'Included' ELSE 'Not Included' END AS water_status,
+                CASE WHEN electricity = 1 THEN 'Included' ELSE 'Not Included' END AS electricity_status,
+                CASE WHEN internet = 1 THEN 'Included' ELSE 'Not Included' END AS internet_status
+            FROM utilities 
+            WHERE login_id = %s
+        ''', (login_id,))
+        utils = established.fetchall()
+        print("Utilities Data:", utils)
 
+        # Fetch visitor data
+        established.execute(''' 
+            SELECT 
+                visit_id, 
+                visitor_name, 
+                visitor_email, 
+                visited_room,
+                time_in,
+                visit_reason,
+                confirmation,
+                DATE_FORMAT(visited_date, '%%m/%%d/%%Y') AS formatted_visited_date 
+            FROM visitors_apartment 
+            WHERE visited_room = %s AND (time_out IS NULL OR time_out = '')
+        ''', (room_number,))
+        visitors = established.fetchall()
+        print("Visitor Data:", visitors)
 
+        if request.method == 'POST':
+            action = request.json.get('action')  # Determine the action (approve, delete, leave)
+            visitor_id = request.json.get('visitor_id')
+            
+            if not visitor_id:
+                return jsonify({"message": "Missing visitor ID."}), 400  # Handle missing visitor ID
 
-    
-    established.close()
-    return render_template("dashboard.html", room_details=room_details,lease_data=lease_data,utils=utils)
+            # Get the current time in the desired format
+            time_now = datetime.now()
+            formatted_time = time_now.strftime("%I:%M %p")  # Format: HH:MM AM/PM
+            
+            # Database operations within try-except for error handling
+            try:
+                if action == 'approve':
+                    established.execute('''UPDATE visitors_apartment SET confirmation = 'approved' WHERE visit_id = %s''', (visitor_id,))
+                    conn.commit()  # Commit the transaction
+                    return jsonify({"message": "Visitor approved successfully."}), 200
+
+                elif action == 'delete':
+                    established.execute('''DELETE FROM visitors_apartment WHERE visit_id = %s''', (visitor_id,))
+                    conn.commit()  # Commit the transaction
+                    return jsonify({"message": "Visitor deleted successfully."}), 200
+
+                elif action == "leave":
+                    established.execute('UPDATE visitors_apartment SET time_out = %s WHERE visit_id = %s', (formatted_time, visitor_id))
+                    conn.commit()
+                    return jsonify({"message": "Successfully left."}), 200
+
+                else:
+                    return jsonify({"message": "Invalid action."}), 400  # Handle invalid action
+
+            except Exception as e:
+                conn.rollback()  # Rollback in case of error
+                print("Error occurred:", e)  # Log the error with more detail
+                return jsonify({"message": f"An error occurred while processing your request: {str(e)}"}), 500
+            
+            finally:
+                if established:
+                    established.close()  # Ensure the cursor is closed after operations
+
+    except Exception as e:
+        print("An error occurred while fetching data:", e)  # Log any errors during data fetching
+        return jsonify({"message": "An error occurred while processing your request."}), 500
+
+    # Render template with all fetched data
+    return render_template("dashboard.html", room_details=room_details, lease_data=lease_data, utils=utils, visitors=visitors)
+
 
 
 
@@ -228,35 +296,61 @@ def userlease():
         return redirect(url_for('authenticated.userlogin'))
 
     lease_con = conn.cursor()
-    lease_con.execute("""SELECT 
-                            DATE_FORMAT(lease_start, '%%m/%%d/%%Y') AS format_lease_start, 
-                            DATE_FORMAT(lease_end, '%%m/%%d/%%Y') AS format_lease_end, 
-                            TIMESTAMPDIFF(MONTH, lease_start, lease_end) AS addmonth,
-                            monthly,
-                            deposite, 
-                            status 
-                        FROM 
-                            lease_inform 
-                        WHERE 
-                            login_id = %s""", (lease_session,))
+    lease_con.execute("""
+    SELECT 
+        DATE_FORMAT(lease.lease_start, '%%m/%%d/%%Y') AS format_lease_start,
+        DATE_FORMAT(lease.lease_end, '%%m/%%d/%%Y') AS format_lease_end,
+        TIMESTAMPDIFF(MONTH, lease.lease_start, lease.lease_end) AS addmonth,
+        lease.monthly,
+        lease.status,
+        
+        -- Utility cost calculations
+        (CASE WHEN utilities.water = 1 THEN 200 ELSE 0 END) AS water_cost,
+        (CASE WHEN utilities.electricity = 1 THEN 500 ELSE 0 END) AS electricity_cost,
+        (CASE WHEN utilities.internet = 1 THEN 300 ELSE 0 END) AS internet_cost,
+        
+        -- Total utility cost
+        (CASE WHEN utilities.water = 1 THEN 200 ELSE 0 END) +
+        (CASE WHEN utilities.electricity = 1 THEN 500 ELSE 0 END) +
+        (CASE WHEN utilities.internet = 1 THEN 300 ELSE 0 END) AS total_utilities_cost,
+        
+        -- Overall cost
+        lease.monthly + 
+        ((CASE WHEN utilities.water = 1 THEN 200 ELSE 0 END) +
+        (CASE WHEN utilities.electricity = 1 THEN 500 ELSE 0 END) +
+        (CASE WHEN utilities.internet = 1 THEN 300 ELSE 0 END)) AS overall_cost
+
+    FROM 
+        lease_inform lease
+    LEFT JOIN 
+        utilities ON lease.login_id = utilities.login_id
+    WHERE 
+        lease.login_id = %s;
+""", (lease_session,))
 
     lease_cred = lease_con.fetchall()
     print("Lease credentials:", lease_cred)
 
+    today = datetime.today().date()
+
+
+    lease_con.execute("SELECT  `start_date`, `end_date`, `monthly`, `approval` FROM `lease_request` WHERE login_Id=%s",(lease_session,))
+    lease_req=lease_con.fetchall()
+
+
     if request.method == 'POST':
-        startdate = request.form.get('startDate')
+        sadate = datetime.today().date()
         endDate = request.form.get('endDate')
         comments = request.form.get('comments')
         monthly=request.form.get('mon_pay')
         downrequest=request.form.get('downpay')
-
-        print("Inserting into lease_request:", lease_session, startdate, endDate, comments,monthly,downrequest)  # Debugging line
+        approval_value='Pending'
 
         try:
             lease_con.execute('''INSERT INTO `lease_request` 
-                        (`login_Id`, `start_date`, `end_date`, `monthly`, `Downpayment`, `Comments`) 
-                        VALUES (%s, %s, %s, %s, %s, %s)''',
-                      (lease_session, startdate, endDate, monthly, downrequest, comments))
+                        (`login_Id`, `start_date`, `end_date`, `monthly`, `Downpayment`, `Comments`,approval) 
+                        VALUES (%s, %s, %s, %s, %s, %s,%s)''',
+                      (lease_session, sadate, endDate, monthly, downrequest, comments,approval_value))
             conn.commit()
             flash('Lease renewal request submitted successfully!', 'success')
         except Exception as e:
@@ -267,7 +361,7 @@ def userlease():
         return redirect(url_for('userlease'))
 
 
-    return render_template("lease.html", lease_cred=lease_cred)
+    return render_template("lease.html",lease_cred=lease_cred,today=today,lease_req=lease_req)
 
 
 
@@ -359,18 +453,23 @@ def user_profile():
             if "userUpdate" in request.form:
                 name = request.form.get('profname')
                 address = request.form.get('profaddress')
+                contact=request.form.get('profnumber')
                 plate_number = request.form.get('plateno')
                 email = request.form.get('profemail')
+
+                if not is_valid_contact(contact):
+                    flash(" Invalid contact Number",'danger')
+                    return redirect(url_for('user_profile'))
 
                 # Update profile information
                 update_query = '''
                     UPDATE apartmentsingup a
                     JOIN loginapartment l ON a.userid = l.loginid
-                    SET a.name = %s, a.address = %s, a.plate_number = %s, l.email = %s
+                    SET a.name = %s, a.address = %s,a.contact_number=%s, a.plate_number = %s, l.email = %s
                     WHERE l.loginid = %s
                 '''
                 
-                prof_exec.execute(update_query, (name, address, plate_number, email, profile_session))
+                prof_exec.execute(update_query, (name, address,contact, plate_number, email, profile_session))
                 conn.commit()
                 flash('Profile updated successfully!', 'success')
                 return redirect(url_for('user_profile'))
@@ -379,7 +478,8 @@ def user_profile():
             SELECT 
                 a.name, 
                 a.address, 
-                a.plate_number, 
+                a.plate_number,
+                a.contact_number, 
                 a.roomNumber,
                 a.ProfilePic, 
                 l.email
@@ -415,12 +515,35 @@ def visitorform():
             visit_email = request.form.get('visitor_email')
             visit_room = request.form.get('visiting_room')
             visit_date = request.form.get('visit_date')
+            visit_time=request.form.get('timeInput')
             visit_reason = request.form.get('visit_reason')
             mark_as = 1
+
+            
+            if visit_time:
+                hour = int(visit_time.split(':')[0])
+                minute = visit_time.split(':')[1]    
+                period = "AM" if hour < 12 else "PM"
+
+                # Convert 24-hour time to 12-hour format
+                hour_12 = hour % 12 or 12
+                formatted_time = f"{hour_12}:{minute} {period}"
+
+            print("sa time input")
 
             # Fetch existing room numbers
             dict_visitors.execute('SELECT roomNumber FROM apartmentsingup')
             rawlist = dict_visitors.fetchall()
+
+            try:
+                visit_date_obj = datetime.strptime(visit_date, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Invalid date format. Please use YYYY-MM-DD.', 'danger')
+                return redirect(url_for('visitorform'))
+            
+            if visit_date_obj < datetime.today().date():
+                flash('Date Invalid.', 'danger')
+                return redirect(url_for('visitorform'))
 
             # Check if rawlist is empty
             if not rawlist:
@@ -432,15 +555,15 @@ def visitorform():
 
             # Check if the visited room exists
             if visit_room not in existing_rooms:
-                flash('This room does not exist', 'error')
+                flash('This room does not exist', 'danger')
                 return redirect(url_for('visitorform'))
 
             # Insert the visitor data into the database
             try:
                 dict_visitors.execute("""
-                    INSERT INTO visitors_apartment (visitor_name, visitor_email, visited_room, visited_date, visit_reason)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (visit_name, visit_email, visit_room, visit_date, visit_reason))
+                    INSERT INTO visitors_apartment (visitor_name, visitor_email, visited_room, visited_date,time_in, visit_reason,confirmation)
+                    VALUES (%s, %s, %s, %s, %s,%s,%s)
+                """, (visit_name, visit_email, visit_room, visit_date,formatted_time, visit_reason,"PENDING"))
 
                 dict_visitors.execute("""
                     INSERT INTO apartmentanalytics (today, has_active) 

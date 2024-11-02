@@ -1,158 +1,190 @@
-from flask import Blueprint, request, render_template, flash, redirect, url_for, session,current_app
-import pymysql
+from flask import Blueprint, request, render_template, flash, redirect, url_for, session
 from argon2 import PasswordHasher
+import pymysql
 from werkzeug.utils import secure_filename
 import os
+import re
 
-
+# Initialize password hasher and Flask blueprint
 ph = PasswordHasher()
-authen = pymysql.connect(
-    host='localhost',
-    user="root",
-    password="",
-    database="apartment",
-    cursorclass=pymysql.cursors.DictCursor
-)
-
 authenticated = Blueprint('authenticated', __name__)
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Set up upload folder and allowed file types
+UPLOAD_FOLDER = os.path.join('static','uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
+# Function to check allowed file extensions
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def is_valid_contact(contact):
+    pattern = re.compile(r'^\+?\d{11,12}$')
+    return pattern.match(contact) is not None
+
+# Function to get a database connection
+def get_db_connection():
+    return pymysql.connect(
+        host='localhost',
+        user='root',
+        password='',
+        database='apartment',
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 @authenticated.route('/Sign-Up', methods=['POST', 'GET'])
 def usersignup():
     if request.method == 'POST':
-        print("Request files:", request.files)
+        # Collect form data
         name = request.form.get('signame')
         address = request.form.get('sigadd')
         platenum = request.form.get('platenum')
         Roomnumber = request.form.get('Roomno')
+        contact=request.form.get('connum')
         email = request.form.get('sigmail')
         password = request.form.get('passwordField')
         retypepass = request.form.get('RepeatpasswordField')
         image_upload = request.files.get('profileImage')
+        terms=request.form.get('terms')
 
-        print("sa image upload", image_upload)
+        # Database connection
+        try:
+            authen = get_db_connection()
+            signup_area = authen.cursor()
 
-        signup_area = authen.cursor()
-        signup_area.execute('SELECT loginid FROM loginapartment WHERE email=%s', (email,))
-        existed_email = signup_area.fetchone()
+            # Check if email or room already exists
+            signup_area.execute('SELECT loginid FROM loginapartment WHERE email=%s', (email,))
+            existed_email = signup_area.fetchone()
 
-        signup_area.execute('SELECT userid FROM apartmentsingup WHERE roomNumber=%s', (Roomnumber,))
-        existed_Room = signup_area.fetchone()
+            signup_area.execute('SELECT userid FROM apartmentsingup WHERE roomNumber=%s', (Roomnumber,))
+            existed_Room = signup_area.fetchone()
 
-        if existed_email:
-            flash('This email already exists', 'danger')
-            return render_template('signup.html')
-        
-        if existed_Room:
-            flash('This Room is already occupied', 'danger')
-            return render_template('signup.html')
-
-        if password != retypepass:
-            flash('Password mismatch, please retry', 'danger')
-            return render_template('signup.html')
-
-        img_up = None  
-        if image_upload and allowed_file(image_upload.filename):
-            filename = secure_filename(image_upload.filename)
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            try:
-                image_upload.save(file_path)
-                img_up = os.path.join(filename)
-            except Exception as e:
-                flash(f'File upload failed: {str(e)}', 'danger')
+            if existed_email:
+                flash('This email already exists', 'danger')
                 return render_template('signup.html')
-        else:
-            if not image_upload:
-                flash('No image selected for uploading.', 'danger')
 
+            if existed_Room:
+                flash('This Room is already occupied', 'danger')
+                return render_template('signup.html')
 
-        hashed_password = ph.hash(password)
+            if not is_valid_contact(contact):
+                flash('Invalid Contact Number')
+                return render_template('signup.html')
 
-        signup_area.execute(
-            'INSERT INTO apartmentsingup(name, address, plate_number, roomNumber, ProfilePic) VALUES (%s, %s, %s, %s, %s)',
-            (name, address, platenum, Roomnumber, img_up)
-        )
-        authen.commit() 
+            if password != retypepass:
+                flash('Password mismatch, please retry', 'danger')
+                return render_template('signup.html')
+            
+            if not terms:
+                flash('You must accept the terms and conditions', 'danger')
+                return render_template('signup.html')
 
-        userid = signup_area.lastrowid
+            # Handle image upload
+            img_up = None
+            if image_upload and allowed_file(image_upload.filename):
+                filename = secure_filename(image_upload.filename)
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                try:
+                    image_upload.save(file_path)
+                    img_up = filename
+                except Exception as e:
+                    flash(f'File upload failed: {str(e)}', 'danger')
+                    return render_template('signup.html')
+            else:
+                if not image_upload:
+                    flash('No image selected for uploading.', 'danger')
+                    return render_template('signup.html')
 
-        signup_area.execute(
-            'INSERT INTO loginapartment(email, password, loginid, uservalue) VALUES (%s, %s, %s, %s)',
-            (email, hashed_password, userid, '0')
-        )
-        authen.commit() 
+            # Hash the password
+            hashed_password = ph.hash(password)
 
-        flash("Signup Complete", 'success')
-        return redirect(url_for('authenticated.userlogin')) 
-    
+            # Insert new user data
+            signup_area.execute(
+                'INSERT INTO apartmentsingup (name, address ,contact_number, plate_number, roomNumber, ProfilePic) VALUES (%s,%s, %s, %s, %s, %s)',
+                (name, address,contact_number, platenum, Roomnumber, img_up)
+            )
+            authen.commit()
+            userid = signup_area.lastrowid
+
+            signup_area.execute(
+                'INSERT INTO loginapartment (email, password, loginid, uservalue) VALUES (%s, %s, %s, %s)',
+                (email, hashed_password, userid, '0')
+            )
+            authen.commit()
+
+            flash("Signup Complete", 'success')
+            return redirect(url_for('authenticated.userlogin'))
+
+        except pymysql.MySQLError as e:
+            flash('Database error occurred during signup. Please try again later.', 'danger')
+            print(f"Database error: {e}")
+        finally:
+            if 'authen' in locals():
+                authen.close()
+
     return render_template('signup.html')
-
 
 @authenticated.route('/Login', methods=['POST', 'GET'])
 def userlogin():
     if request.method == 'POST':
-        loginmail = request.form.get('logemail')
-        logpassword = request.form.get('LoginpasswordField')
+        # Collect login credentials
+        login_email = request.form.get('logemail')
+        login_password = request.form.get('LoginpasswordField')
 
-        # Print debug information
-        print("sa email:", loginmail)
-        print("sa pass:", logpassword)
+        # Attempt to connect to the database
+        try:
+            authen = get_db_connection()
+            login_area = authen.cursor()
 
-        login_area = authen.cursor()
+            # Retrieve user details
+            login_area.execute(
+                'SELECT loginid, uservalue, password FROM loginapartment WHERE email=%s',
+                (login_email,)
+            )
+            user = login_area.fetchone()
 
-        # Query to get user information including user value
-        login_area.execute(''' 
-            SELECT loginid, uservalue, password 
-            FROM loginapartment 
-            WHERE email=%s
-        ''', (loginmail,))
+            # Check if user exists and password is correct
+            if user:
+                login_id = user['loginid']
+                user_value = user['uservalue']
+                stored_password = user['password']
 
-        user = login_area.fetchone()
+                try:
+                    # Verify the password
+                    if ph.verify(stored_password, login_password):
+                        # Set up session
+                        session['user_id'] = login_id
+                        session.permanent = True
 
-        # Debugging output
-        print("Fetched user:", user)
-
-        if user:
-            loginid = user['loginid']
-            uservalue = user['uservalue']
-            stored_password = user['password']
-
-            # Verify the password using Argon2
-            try:
-                if ph.verify(stored_password, logpassword):
-                    session['user_id'] = loginid
-                    session.permanent = True
-
-                    # Check user value
-                    if uservalue == 1:
-                        flash('Welcome, Admin!', 'success')
-                        return redirect(url_for('admins.Admin_dashboard'))  
-                    elif uservalue == 0:
-                        flash('Welcome, User!', 'success')
-                        return redirect(url_for('userdashboard')) 
+                        # Redirect based on user role
+                        if user_value == 1:
+                            flash('Welcome, Admin!', 'success')
+                            return redirect(url_for('admins.Admin_dashboard'))
+                        elif user_value == 0:
+                            flash('Welcome, User!', 'success')
+                            return redirect(url_for('userdashboard'))
+                        else:
+                            flash('Unknown user type', 'danger')
+                            return redirect(url_for('authenticated.userlogin'))
                     else:
-                        flash('Unknown user type', 'danger')
-                        return redirect(url_for('authenticated.userlogin')) 
-                else:
-                    flash('Invalid email or password', 'danger')
-                    return redirect(url_for('authenticated.userlogin'))
-            except Exception as e:
-                flash('Error verifying password', 'danger')
-                print("Verification error:", e)
-                return redirect(url_for('authenticated.userlogin'))
-        else:
-            flash('Invalid email or password', 'danger')
-            return redirect(url_for('authenticated.userlogin'))
+                        flash('Invalid email or password', 'danger')
+                except Exception as e:
+                    flash(f'Error verifying password', 'danger')
+            else:
+                flash('Invalid email or password', 'danger')
+
+        except pymysql.MySQLError as e:
+            flash('Database connection failed. Please try again later.', 'danger')
+            print(f"Database error: {e}")
+        finally:
+            if 'authen' in locals():
+                authen.close()
 
     return render_template('login.html')
 
 @authenticated.route('/logout')
 def logout():
+    # Clear the session and redirect to the homepage
     session.clear()
+    flash('You have been logged out successfully.', 'success')
     return redirect(url_for('index'))

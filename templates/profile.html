@@ -44,12 +44,16 @@
 
             <div class="mb-3">
                 <label for="plateno" class="form-label">Plate Number</label>
-                <input type="text" class="form-control" name="plateno" id="plateno" value="{{ profileview[0]['plate_number'] }}" required>
+                <input type="text" class="form-control" name="plateno" id="plateno" value="{{ profileview[0]['plate_number'] }}">
             </div>
 
             <div class="mb-3">
                 <label for="profaddress" class="form-label">Address</label>
                 <input type="text" class="form-control" name="profaddress" id="profaddress" value="{{ profileview[0]['address'] }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="profaddress" class="form-label">Contact Number</label>
+                <input type="text" class="form-control" name="profnumber" id="profnumber" value="{{ profileview[0]['contact_number'] }}" required>
             </div>
             {% endif %}
 

@@ -32,14 +32,26 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="apartment" class="form-label">Visiting Room</label>
-                  <input type="text" class="form-control" name="visiting_room" id="visiting_room" placeholder="Room Number" required>
+                  <label for="visiting_room" class="form-label">Visiting Room</label>
+                      <select class="form-select" name="visiting_room" id="visiting_room" required>
+                          <option value="" disabled selected>Select Room Number</option>
+                          <option value="Room1">Room 1</option>
+                          <option value="Room2">Room 2</option>
+                          <option value="Room3">Room 3</option>
+                          <option value="Room4">Room 4</option>
+                      </select>
                 </div>
 
                 <div class="mb-3">
                   <label for="visit_date" class="form-label">Visit Date</label>
                   <input type="date" class="form-control" name="visit_date" id="visit_date" required>
                 </div>
+
+                <div class="mb-3">
+                  <label for="timeInput" class="form-label">Choose a Time</label>
+                  <input type="time" class="form-control" name="timeInput" id="timeInput" placeholder="Time Visit" required>
+                </div>
+              
 
                 <div class="mb-3">
                     <label for="visit_reason" class="form-label">Visiting Reasons</label>

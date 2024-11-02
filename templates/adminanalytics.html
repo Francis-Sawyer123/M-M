@@ -16,7 +16,10 @@
                 <th>Visitor Email</th>
                 <th>Visited Room</th>
                 <th>Visited Date</th>
+                <th>Time In</th>
+                <th>Time Out</th>
                 <th>Purposes</th>
+                <th>Tenant Confirmation</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -103,8 +106,16 @@
                             <td>${list_visit.visitor_name}</td>
                             <td>${list_visit.visitor_email}</td>
                             <td>${list_visit.visited_room}</td>
-                            <td>${list_visit.visited_date}</td>
+                            <td>${new Date(list_visit.visited_date).toLocaleDateString('en-US', {
+                                weekday: 'short', 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric'
+                            })}</td>
+                            <td>${list_visit.time_in}</td>
+                            <td>${list_visit.time_out}</td>
                             <td>${list_visit.visit_reason}</td>
+                            <td>${list_visit.confirmation}</td>
                             <td><button class="btn btn-danger delete-visit" data-del="${list_visit.visit_id}">Delete</button></td>
                         </tr>
                     `).join('');

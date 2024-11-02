@@ -127,7 +127,8 @@ def Admin_dashboard():
             SELECT 
                 a.userid, 
                 a.name, 
-                a.address, 
+                a.address,
+                a.contact_number,  
                 a.plate_number, 
                 a.roomNumber,
                 a.ProfilePic, 
@@ -146,6 +147,7 @@ def Admin_dashboard():
                 'userid': row['userid'],
                 'name': row['name'],
                 'address': row['address'],
+                'contact_number': row['contact_number'],
                 'plate_number': row['plate_number'],
                 'roomNumber': row['roomNumber'],
                 'ProfilePic':row['ProfilePic'],
@@ -173,8 +175,8 @@ def Admin_dashboard():
             hashed_password = ph.hash(data['password'])
             try:
                 throw_data.execute(
-                    "INSERT INTO apartmentsingup (name, address, plate_number, roomNumber) VALUES (%s, %s, %s, %s)",
-                    (data['name'], data['address'], data['plate_number'], data['roomNumber'])
+                    "INSERT INTO apartmentsingup (name, address,contact_number,plate_number, roomNumber) VALUES (%s,%s, %s, %s, %s)",
+                    (data['name'], data['address'], data['contact_number'], data['plate_number'], data['roomNumber'])
                 )
                 login_id = throw_data.lastrowid
                 throw_data.execute(
@@ -204,8 +206,8 @@ def Admin_dashboard():
                     )
 
                 throw_data.execute(
-                    "UPDATE apartmentsingup SET name = %s, address = %s, plate_number = %s, roomNumber = %s WHERE userid = %s",
-                    (data['name'], data['address'], data['plate_number'], data['roomNumber'], data['userid'])
+                    "UPDATE apartmentsingup SET name = %s, address = %s, contact_number = %s, plate_number = %s, roomNumber = %s WHERE userid = %s",
+                    (data['name'], data['address'],data['contact_number'], data['plate_number'], data['roomNumber'], data['userid'])
                 )
                 con_admin.commit()
                 print("User updated successfully.")
@@ -231,7 +233,7 @@ def Admin_dashboard():
         elif action == 'view_utilities':
             print("Fetching utilities for user ID:", data['userid'])
             throw_data.execute(
-                "SELECT login_id, water, electricity, parking, internet FROM utilities WHERE login_id = %s",
+                "SELECT login_id, water, electricity, internet FROM utilities WHERE login_id = %s",
                 (data['userid'],)
             )
             utility_data = throw_data.fetchone()
@@ -241,13 +243,12 @@ def Admin_dashboard():
                     'login_id': utility_data['login_id'],
                     'water': utility_data['water'],
                     'electricity': utility_data['electricity'],
-                    'parking': utility_data['parking'],
                     'internet': utility_data['internet']
                 }
                 return jsonify(utilities), 200
             else:
                 print("No utilities found for user ID:", data['userid'])
-                return jsonify({'login_id': data['userid'], 'water': 0, 'electricity': 0, 'parking': 0, 'internet': 0}), 200
+                return jsonify({'login_id': data['userid'], 'water': 0, 'electricity': 0, 'internet': 0}), 200
 
         elif action == 'update_utilities':
             print("Updating utilities for user ID:", data['userid'])
@@ -262,18 +263,17 @@ def Admin_dashboard():
                     throw_data.execute(
                         """UPDATE utilities SET 
                         water = %s, 
-                        electricity = %s, 
-                        parking = %s, 
+                        electricity = %s,  
                         internet = %s 
                         WHERE login_id = %s""",
-                        (data['water'], data['electricity'], data['parking'], data['internet'], data['userid'])
+                        (data['water'], data['electricity'], data['internet'], data['userid'])
                     )
                     print("Utilities updated successfully.")
                 else:
                     throw_data.execute(
-                        """INSERT INTO utilities (login_id, water, electricity, parking, internet) 
-                        VALUES (%s, %s, %s, %s, %s)""",
-                        (data['userid'], data['water'], data['electricity'], data['parking'], data['internet'])
+                        """INSERT INTO utilities (login_id, water, electricity, internet) 
+                        VALUES (%s, %s, %s, %s)""",
+                        (data['userid'], data['water'], data['electricity'],data['internet'])
                     )
                     print("Utilities inserted successfully.")
                 
@@ -749,7 +749,10 @@ def visitorlogs():
                     'visitor_email': visit_val['visitor_email'],
                     'visited_room': visit_val['visited_room'],
                     'visited_date': visit_val['visited_date'],
-                    'visit_reason': visit_val['visit_reason']
+                    'time_in':visit_val['time_in'],
+                    'time_out':visit_val['time_out'],
+                    'visit_reason': visit_val['visit_reason'],
+                    'confirmation':visit_val['confirmation']
                 } 
                 for visit_val in review_visitors
             ]

@@ -1,97 +1,267 @@
-{%extends 'usernav.html'%}
+{% extends 'usernav.html' %}    
 
-{%block user_body%}
+{% block user_body %}
+
 <main class="main py-5 bg-light">
-    <!-- Optional content or spacing above -->
     <div id="additional-content" class="container mb-5"></div>
-  
-    <section id="apartment-overview" class="container">
-      <div class="row">
-        <!-- Apartment Details Card -->
-        <div class="col-md-6 mb-4">
-          <div class="card border-primary shadow-sm">
-            <div class="card-header bg-primary text-white">
-              <h5 class="card-title mb-0">Apartment Details</h5>
-            </div>
-            {% if room_details %}
-            <h2>Room Information</h2>
-            <img src="{{ url_for('static', filename='assets/img/' ~ room_details['Room_Img']) }}" alt="Room Image">
-            <p><strong>Room ID:</strong> {{ room_details['room_id'] }}</p>
-            <p><strong>Unit Name:</strong> {{ room_details['Unit_name'] }}</p>
-            <p><strong>Room Floor:</strong> {{ room_details['room_floor'] }}</p>
-            <p><strong>Room Size:</strong> {{ room_details['room_size'] }}</p>
-        {% else %}
-            <p>No room occupied.</p>
-        {% endif %}
 
-          </div>
+    <section id="apartment-overview" class="container">
+        <div class="row">
+            <!-- Apartment Details Card -->
+            <div class="col-md-6 mb-4" id="apartment-details">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="bi bi-house-door-fill card-title mb-0">Apartment Details</h5>
+                    </div>
+                    {% if room_details %}
+                        <h2>Room Information</h2>
+                        <img src="{{ url_for('static', filename='assets/img/' ~ room_details['Room_Img']) }}" alt="Image of {{ room_details['Unit_name'] }}" class="img-fluid">
+                        <p><strong>Room ID:</strong> {{ room_details['room_id'] }}</p>
+                        <p><strong>Unit Name:</strong> {{ room_details['Unit_name'] }}</p>
+                        <p><strong>Room Floor:</strong> {{ room_details['room_floor'] }}</p>
+                        <p><strong>Room Size:</strong> {{ room_details['room_size'] }}</p>
+                    {% else %}
+                        <p>No room occupied.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Visitors Details Card -->
+            <div class="col-md-6 mb-4" id="visitors-details">
+                <div class="card border-success shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="bi bi-bell-fill card-title mb-0">Visitors Details</h5>
+                    </div>
+                    <div class="card-body" id="visitorList">
+                        {% for visitor in visitors %}
+                        <p>
+                            <a href="javascript:void(0)" class="visitor-name" 
+                               data-visitor-id="{{ visitor.visit_id }}"
+                               data-visitor-name="{{ visitor.visitor_name }}"
+                               data-visited-date="{{ visitor.formatted_visited_date }}"
+                               data-time-in="{{ visitor.time_in }}"
+                               data-visit-reason="{{ visitor.visit_reason }}"
+                               data-confirmation="{{ visitor.confirmation }}"
+                               onclick="openVisitorModal(this)">
+                               {{ visitor.visitor_name | e }} -
+                            </a>
+                            {% if visitor.confirmation == 'approved' %}
+                                <span class="text-warning" style="cursor: pointer;" onclick="handleLeave('{{ visitor.visit_id }}')">Leave</span>
+                            {% elif visitor.confirmation == 'declined' %}
+                                <span class="text-danger" style="cursor: pointer;" onclick="handleDelete('{{ visitor.visit_id }}')">Delete</span>
+                            {% else %}
+                                <span class="text-success" style="cursor: pointer;" onclick="handleApprove('{{ visitor.visit_id }}')">Approve</span> |
+                                <span class="text-danger" style="cursor: pointer;" onclick="handleDecline('{{ visitor.visit_id }}')">Decline</span>
+                            {% endif %}
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lease Information Card -->
+            <div class="col-md-12 mb-4" id="lease-information">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="bi bi-wallet-fill card-title mb-0">Lease Information</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if lease_data %}
+                            <strong>Monthly Rent:</strong> {{ lease_data[0]['monthly'] }}<br>
+                            <strong>Lease Start Date:</strong> {{ lease_data[0]['format_lease_start'] }}<br>
+                            <strong>Lease End Date:</strong> {{ lease_data[0]['format_lease_end'] }}<br>
+                            <strong>Total Months:</strong> {{ lease_data[0]['addmonth'] }}<br>
+                            <strong>Down Payment:</strong> {{ lease_data[0]['deposite'] }}<br>
+                            <strong>Total Payment:</strong> {{ lease_data[0]['overall_cost'] }}<br>
+                            <strong>Next Month Payment Date:</strong> {{ lease_data[0]['next_payment_date'] }}<br>
+                            <strong>Next Month Payment Amount:</strong> {{ lease_data[0]['total_next_payment_cost'] }}<br>
+                        {% else %}
+                            <p>No Data Display.</p>
+                        {% endif %}
+                    </div>
+                    
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilities and Amenities Card -->
+            <div class="col-md-12 mb-4" id="utilities-amenities">
+                <div class="card border-info shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="bi bi-plugin card-title mb-0">Utilities and Amenities</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            {% if utils and utils|length > 0 %}
+                                <li><i class="bi bi-check-circle text-success"></i> <strong>Water:</strong> {{ utils[0]['water_status'] }}</li>
+                                <li><i class="bi bi-check-circle text-success"></i> <strong>Electricity:</strong> {{ utils[0]['electricity_status'] }}</li>
+                                <li><i class="bi bi-check-circle text-success"></i> <strong>Internet:</strong> {{ utils[0]['internet_status'] }}</li>
+                            {% else %}
+                                <li>No utilities data available.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Card -->
+            <div class="col-md-12 mb-4" id="facilitator-information">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="bi bi-person-lines-fill card-title mb-0">Facilitator Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>Property Owner:</strong> Modesta Monico<br>
+                            <strong>Property Manager:</strong> Rogelio Monico Jr.<br>
+                            <strong>Phone:</strong> <a href="tel:+639282610509">0928-261-0509</a><br>
+                            <strong>Email:</strong> <a href="mailto:rogeliomonicojrr@gmail.com">rogeliomonicojrr@gmail.com</a><br>
+                            <strong>Office Hours:</strong> Mon-Fri 9AM - 5PM
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <p>
+                If you have a visitor, please refer them to the following link for more information: 
+                <a class="text-primary" href="#">Visitor Refers</a>. 
+                We appreciate your cooperation and hope to make their experience enjoyable. 
+                If you have any questions, feel free to reach out!
+            </p>
         </div>
-  
-        <!-- Lease Information Card -->
-        <div class="col-md-6 mb-4">
-          <div class="card border-success shadow-sm">
-            <div class="card-header bg-success text-white">
-              <h5 class="card-title mb-0">Lease Information</h5>
-            </div>
-            <div class="card-body">
-              {% if lease_data and lease_data|length > 0 %}
-              <h6 class="card-subtitle mb-2 text-muted">{{ lease_data[0]['leaseTerm'] }}</h6>
-              <p class="card-text">
-                  <strong>Lease Start Date:</strong> {{ lease_data[0]['formatted_lease_start'] }}<br>
-                  <strong>Lease End Date:</strong> {{ lease_data[0]['formatted_lease_end'] }}<br>
-                  <strong>Monthly Rent:</strong> {{ lease_data[0]['monthly'] }}<br>
-                  <strong>Security Deposit:</strong> {{ lease_data[0]['deposite'] }}
-              </p>
-          {% else %}
-              <p>No lease data available.</p>
-          {% endif %}          
-            </div>
-          </div>
-        </div>
-  
-        <!-- Utilities and Amenities Card -->
-        <div class="col-md-12 mb-4">
-          <div class="card border-info shadow-sm">
-            <div class="card-header bg-info text-white">
-              <h5 class="card-title mb-0">Utilities and Amenities</h5>
-            </div>
-            <div class="card-body">
-              <ul class="list-unstyled">
-                {% if utils and utils|length > 0 %}
-                <li><i class="bi bi-check-circle text-success"></i> <strong>Water:</strong>{{utils[0]['water_status']}}</li>
-                <li><i class="bi bi-check-circle text-success"></i> <strong>Electricity:</strong>{{utils[0]['electricity_status']}}</li>
-                <li><i class="bi bi-check-circle text-success"></i> <strong>Internet:</strong>{{utils[0]['internet_status']}}</li>
-                <li><i class="bi bi-check-circle text-success"></i> <strong>Parking:</strong>{{utils[0]['parking_status']}}</li>
-                {%endif%}
-              </ul>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Contact Information Card -->
-        <div class="col-md-12 mb-4">
-          <div class="card border-danger shadow-sm">
-            <div class="card-header bg-danger text-white">
-              <h5 class="card-title mb-0">Facilitator Information</h5>
-            </div>
-            <div class="card-body">
-              <p class="card-text">
-                <strong>Property Owner:</strong> Modesta Monico<br>
-                <strong>Property Manager:</strong> Rogelio Monico Jr.<br>
-                <strong>Phone:</strong> <a href="tel:+63 9282610509">0928-261-0509</a><br>
-                <strong>Email:</strong> <a href="rogeliomonicojrr@gmail.com">rogeliomonicojrr@gmail.com</a><br>
-                <strong>Office Hours:</strong> Mon-Fri 9AM - 5PM
-              </p>
-            </div>
-          </div>
-        </div>
-        <p>
-          If you have a visitor, please refer them to the following link for more information: 
-          <a class="text-primary" href="#">Visitor Refers</a>. 
-          We appreciate your cooperation and hope to make their experience enjoyable. 
-          If you have any questions, feel free to reach out!
-      </p>
-      </div>
     </section>
-  </main>
-{%endblock%}
+
+    <!-- Modal -->
+    <div class="modal fade" id="visitormodal" tabindex="-1" aria-labelledby="visitorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="visitorModalLabel">Visitor Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="visitorModalBody" data-visitor-id="">
+                    <!-- Details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    const driver = window.driver.js.driver;
+
+    const hasVisited = localStorage.getItem('hasVisitedTour');
+    if (!hasVisited) {
+        const driverObj = driver({
+        showProgress: true,
+        steps: [
+        { element: '#apartment-details', popover: { title: 'Apartment Details', description: 'View the specific details about the apartment, including size, layout, and features.' } },
+        { element: '#lease-information', popover: { title: 'Lease Information', description: 'Find information about the lease terms, duration, and conditions.' } },
+        { element: '#utilities-amenities', popover: { title: 'Utilities and Amenities', description: 'Learn about the utilities included and the amenities available to residents.' } },
+        { element: '#facilitator-information', popover: { title: 'Facilitator Information', description: 'Contact details and background information about the facilitator or property manager.' } }
+        ]
+        });
+
+        driverObj.drive();
+        localStorage.setItem('hasVisitedTour', 'true');
+        }
+
+        // for visitors
+        function openVisitorModal(element) {
+            // Get data from the clicked element
+            const visitorId = element.getAttribute('data-visitor-id');
+            const visitorName = element.getAttribute('data-visitor-name');
+            const visitedDate = element.getAttribute('data-visited-date');
+            const timeIn = element.getAttribute('data-time-in');
+            const visitReason = element.getAttribute('data-visit-reason');
+            const visitorStatus = element.getAttribute('data-visitor-status');
+                
+
+            // Populate the modal body with visitor details
+            const modalBody = document.getElementById('visitorModalBody');
+            modalBody.setAttribute('data-visitor-id', visitorId);
+                
+            // Construct the modal content
+            modalBody.innerHTML = `
+                <h5>Visitor Name: ${visitorName}</h5>
+                <p>Date of Visit: ${visitedDate}</p>
+                <p>Time In: ${timeIn ? timeIn : 'N/A'}</p>
+                <p>Reason for Visit: ${visitReason ? visitReason : 'N/A'}</p>
+            `;
+
+            // Show the modal
+            var modal = new bootstrap.Modal(document.getElementById('visitormodal'));
+            modal.show();
+        }
+
+        function handleApprove(visitorId) {
+            console.log("Approving visitor:", visitorId);
+            fetch('/Dashboard', {
+                method: 'POST',
+                headers: {
+                   'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'approve', visitor_id: visitorId })
+            })
+
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); // Show success or error message
+                location.reload(); // Reload the page to reflect changes
+            })
+
+            .catch(error => {
+                console.error("Error approving visitor:", error);
+            });
+        }
+
+        function handleDelete(visitorId) {
+            console.log("Deleting visitor:", visitorId);
+            if (confirm("Are you sure you want to delete this visitor?")) {
+                fetch('/Dashboard', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'delete', visitor_id: visitorId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message); // Show success or error message
+                    location.reload(); // Reload the page to reflect changes
+                })
+                .catch(error => {
+                    console.error("Error deleting visitor:", error);
+                });
+            }
+        }
+
+        function handleLeave(visitorId){
+            console.log("Leave is commited Successfully");
+            fetch('/Dashboard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'leave', visitor_id: visitorId })
+            })
+
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload();
+            })
+
+            .catch(error => {
+                console.error("Error approving visitor:", error);
+            });
+        }
+</script>
+
+{% endblock %}

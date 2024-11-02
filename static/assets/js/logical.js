@@ -13,6 +13,7 @@ $(document).ready(function() {
                             <td><img src="/static/uploads/${user.ProfilePic}" alt="Profile Picture" class="profile-pic" width="100" data-img="/static/uploads/${user.ProfilePic}"></td>
                             <td>${user.name}</td>
                             <td>${user.address}</td>
+                            <td>${user.contact_number}</td>
                             <td>${user.plate_number}</td>
                             <td>${user.roomNumber}</td>
                             <td>${user.email}</td>
@@ -56,10 +57,6 @@ $(document).ready(function() {
                             <label class="form-check-label" for="electricity">Electricity</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="parking" name="parking" ${response.parking ? 'checked' : ''}>
-                            <label class="form-check-label" for="parking">Parking</label>
-                        </div>
-                        <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="internet" name="internet" ${response.internet ? 'checked' : ''}>
                             <label class="form-check-label" for="internet">Internet</label>
                         </div>
@@ -84,7 +81,6 @@ $(document).ready(function() {
             login_id: $('#login_id').val(),
             water: $('#water').is(':checked') ? 1 : 0,
             electricity: $('#electricity').is(':checked') ? 1 : 0,
-            parking: $('#parking').is(':checked') ? 1 : 0,
             internet: $('#internet').is(':checked') ? 1 : 0,
             action: 'update_utilities'
         };
@@ -117,6 +113,10 @@ $(document).ready(function() {
                 <div class="form-group">
                     <label for="address">Address</label>
                     <input type="text" class="form-control" name="address" id="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="Contact">Contact Number</label>
+                    <input type="text" class="form-control" name="con_user" id="con_user" required>
                 </div>
                 <div class="form-group">
                     <label for="plate_number">Plate Number</label>
@@ -159,6 +159,10 @@ $(document).ready(function() {
                     <input type="text" class="form-control" name="address" id="address" value="${user.address}" required>
                 </div>
                 <div class="form-group">
+                    <label for="Contact">Contact Number</label>
+                    <input type="text" class="form-control" name="con_user" id="con_user" value="${user.contact_number}" required>
+                </div>
+                <div class="form-group">
                     <label for="plate_number">Plate Number</label>
                     <input type="text" class="form-control" name="plate_number" id="plate_number" value="${user.plate_number}">
                 </div>
@@ -186,6 +190,7 @@ $(document).ready(function() {
             userid: $('#userid').val(),
             name: $('#name').val(),
             address: $('#address').val(),
+            contact_number: $('#con_user').val(),
             plate_number: $('#plate_number').val(),
             roomNumber: $('#roomNumber').val(),
             email: $('#email').val(),
