@@ -69,13 +69,13 @@ def roomavailable():
         # Fetch distinct occupied room numbers
     show_room.execute("SELECT DISTINCT roomNumber FROM apartmentsingup")
     occupied_rooms = show_room.fetchall()
-    occupied_room_numbers = {room['roomNumber'] for room in occupied_rooms}  # Create a set of occupied room numbers
+    occupied_room_numbers = {room['roomNumber'] for room in occupied_rooms}  
 
     print("Occupied Rooms:", occupied_room_numbers)
     print("Room Availability:", rooms)
 
 
-    # Pass both rooms and occupied room numbers to the template
+ 
     return render_template("roomavailability.html", rooms=rooms, occupied_room_numbers=occupied_room_numbers)
 
 @app.route('/FloorPlan')
@@ -173,26 +173,26 @@ def userdashboard():
         print("Visitor Data:", visitors)
 
         if request.method == 'POST':
-            action = request.json.get('action')  # Determine the action (approve, delete, leave)
+            action = request.json.get('action') 
             visitor_id = request.json.get('visitor_id')
             
             if not visitor_id:
-                return jsonify({"message": "Missing visitor ID."}), 400  # Handle missing visitor ID
+                return jsonify({"message": "Missing visitor ID."}), 400  
 
-            # Get the current time in the desired format
-            time_now = datetime.now()
-            formatted_time = time_now.strftime("%I:%M %p")  # Format: HH:MM AM/PM
             
-            # Database operations within try-except for error handling
+            time_now = datetime.now()
+            formatted_time = time_now.strftime("%I:%M %p")  
+            
+            
             try:
                 if action == 'approve':
                     established.execute('''UPDATE visitors_apartment SET confirmation = 'approved' WHERE visit_id = %s''', (visitor_id,))
-                    conn.commit()  # Commit the transaction
+                    conn.commit()  
                     return jsonify({"message": "Visitor approved successfully."}), 200
 
                 elif action == 'delete':
                     established.execute('''DELETE FROM visitors_apartment WHERE visit_id = %s''', (visitor_id,))
-                    conn.commit()  # Commit the transaction
+                    conn.commit()  
                     return jsonify({"message": "Visitor deleted successfully."}), 200
 
                 elif action == "leave":
@@ -201,22 +201,21 @@ def userdashboard():
                     return jsonify({"message": "Successfully left."}), 200
 
                 else:
-                    return jsonify({"message": "Invalid action."}), 400  # Handle invalid action
+                    return jsonify({"message": "Invalid action."}), 400  
 
             except Exception as e:
-                conn.rollback()  # Rollback in case of error
-                print("Error occurred:", e)  # Log the error with more detail
+                conn.rollback() 
+                print("Error occurred:", e) 
                 return jsonify({"message": f"An error occurred while processing your request: {str(e)}"}), 500
             
             finally:
                 if established:
-                    established.close()  # Ensure the cursor is closed after operations
+                    established.close() 
 
     except Exception as e:
         print("An error occurred while fetching data:", e)  # Log any errors during data fetching
         return jsonify({"message": "An error occurred while processing your request."}), 500
 
-    # Render template with all fetched data
     return render_template("dashboard.html", room_details=room_details, lease_data=lease_data, utils=utils, visitors=visitors)
 
 
@@ -500,7 +499,7 @@ def user_profile():
         return jsonify({"error": "An unexpected error occurred."}), 500
 
     finally:
-        prof_exec.close()  # Ensure the cursor is closed properly
+        prof_exec.close() 
 
 
 
