@@ -30,7 +30,8 @@
       </tbody>
     </table>
   </div>
-
+  <div class="topspacer"></div>
+  <div id='calendar'></div>
   <!-- Notification Modal -->
   <div class="modal fade" id="combinedModal" tabindex="-1" aria-labelledby="combinedModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -70,8 +71,58 @@
   </div>
 </div>
 
+
+<!-- Modal for Update -->
+<div class="modal fade" id="updatePaymentModal" tabindex="-1" role="dialog" aria-labelledby="updatePaymentModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="updatePaymentModalLabel">Update Payment</h5>
+          </div>
+          <div class="modal-body d-flex">
+              <div class="w-50 pr-2">
+                  <form id="updatePaymentForm">
+                      <div class="form-group">
+                          <label for="monthlyAmount">Monthly Amount</label>
+                          <input type="number" class="form-control" id="monthlyAmount" required>
+                      </div>
+                      <div class="form-group">
+                          <label for="depositeAmount">Deposit Amount</label>
+                          <input type="number" class="form-control" id="depositeAmount" required>
+                      </div>
+                      <input type="hidden" id="leaseId" value="">
+                  </form>
+              </div>
+              <div class="w-50 pl-3">
+                  <h5>Calculator</h5>
+                  <div class="form-group">
+                      <input type="number" id="calcInput1" class="form-control mb-2" placeholder="Enter first number">
+                      <input type="number" id="calcInput2" class="form-control mb-2" placeholder="Enter second number">
+                  </div>
+                  <div class="form-group">
+                      <button class="btn btn-primary" id="addBtn">+</button>
+                      <button class="btn btn-primary" id="subtractBtn">-</button>
+                      <button class="btn btn-primary" id="multiplyBtn">x</button>
+                      <button class="btn btn-primary" id="divideBtn">÷</button>
+                  </div>
+                  <h6>Result: <span id="calcResult">0</span></h6>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="saveChangesBtn">Save changes</button>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script> 
 <script>
+  
 $(document).ready(function() {
   // Function to fetch lease data and populate the table
   function fetchLeaseData() {
@@ -105,7 +156,10 @@ $(document).ready(function() {
               <td>${lease.monthly}</td>
               <td>${lease.deposite}</td>
               <td>${lease.status}</td>
-              <td><button class="btn btn-danger delete-lease-btn" data-lease-id="${lease.leaseid}">Delete</button></td>
+              <td>
+                <button class="btn btn-warning Update-lease-btn" data-lease-id="${lease.leaseid}"data-monthly-amount="${lease.monthly}" data-deposit-amount="${lease.deposite}">Update Payment</button>
+                <button class="btn btn-danger delete-lease-btn" data-lease-id="${lease.leaseid}">Delete</button>
+                </td>
             </tr>
           `);
         });
@@ -196,7 +250,7 @@ $(document).ready(function() {
       <p><strong>Start Date:</strong> ${startDate}</p>
       <p><strong>End Date:</strong> ${endDate}</p>
     `);
-    $('#detailModalBody').data('lease-id', leaseId); // Store lease ID for approval
+    $('#detailModalBody').data('lease-id', leaseId);
     $('#detailModal').modal('show');
   });
 
@@ -273,9 +327,9 @@ $(document).ready(function() {
           lease_id: leaseId
         }),
         success: function(response) {
-          alert(response.message); // Notify user
-          fetchLeaseData(); // Refresh the lease data
-          updateNotificationCount(); // Update notification count if necessary
+          alert(response.message);
+          fetchLeaseData();
+          updateNotificationCount();
         },
         error: function(xhr) {
           alert('Error: ' + (xhr.responseJSON?.error || 'An error occurred.'));
@@ -284,10 +338,161 @@ $(document).ready(function() {
     }
   });
 
-  // Initialize the notification count and lease data
+
+  $(document).ready(function() {
+    // Update button click event
+    $(document).on('click', '.Update-lease-btn', function() {
+        var leaseId = $(this).data('lease-id');
+        var monthlyAmount = $(this).data('monthly-amount');
+        var depositAmount = $(this).data('deposit-amount');
+
+        // Set values in the modal inputs
+        $('#leaseId').val(leaseId);
+        $('#monthlyAmount').val(monthlyAmount);
+        $('#depositeAmount').val(depositAmount); 
+
+        // Show the modal
+        $('#updatePaymentModal').modal('show');
+    });
+
+    // Calculator functionality
+    $('#addBtn').on('click', function() {
+        calculate('+');
+    });
+    $('#subtractBtn').on('click', function() {
+        calculate('-');
+    });
+    $('#multiplyBtn').on('click', function() {
+        calculate('*');
+    });
+    $('#divideBtn').on('click', function() {
+        calculate('/');
+    });
+
+    function calculate(operation) {
+        var num1 = parseFloat($('#calcInput1').val());
+        var num2 = parseFloat($('#calcInput2').val());
+        var result = 0;
+
+        switch (operation) {
+            case '+':
+                result = num1 + num2;
+                break;
+            case '-':
+                result = num1 - num2;
+                break;
+            case '*':
+                result = num1 * num2;
+                break;
+            case '/':
+                result = num2 !== 0 ? num1 / num2 : 'Error: Div by 0';
+                break;
+        }
+
+        $('#calcResult').text(result);
+    }
+
+    // Handle saving changes
+    $(document).on('click', '#saveChangesBtn', function() {
+        var monthlyAmount = $('#monthlyAmount').val();
+        var depositeAmount = $('#depositeAmount').val();
+        var leaseId = $('#leaseId').val();
+
+        // AJAX call to save the changes
+        $.ajax({
+            url: '/admin/update_approval', 
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                lease_id: leaseId,
+                action: 'update-payment',
+                monthlyAmount: monthlyAmount,
+                depositeAmount: depositeAmount 
+            }),
+            success: function(response) {
+                // Close the modal after saving
+                $('#updatePaymentModal').modal('hide');
+
+                // Notify user about successful update
+                alert('Lease updated successfully');
+
+                // Reload the page to reflect the changes
+                location.reload(); 
+            },
+            error: function(xhr, status, error) {
+                console.error('Error saving data:', error);
+                alert('An error occurred while saving changes. Please try again.');
+            }
+        });
+    });
+});
+
+
+
+
   updateNotificationCount();
   fetchLeaseData();
+  
+
 });
+
+function getLeaseEvents() {
+        return fetch('/admin/Lease_management', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(leasesData => {
+            if (!leasesData.calendar_show) {
+                throw new Error('Invalid data structure: ' + JSON.stringify(leasesData));
+            }
+
+            return leasesData.calendar_show.flatMap(lease => {
+                const startDate = new Date(lease.lease_start);
+                const endDate = new Date(lease.lease_end);
+                const nextDueDate = new Date(lease.next_payment_date);
+                return [
+                    { title: 'Lease Start - ' + lease.name, start: startDate.toISOString().split('T')[0], classNames: ['lease-event', 'lease-start'] },
+                    { title: 'Next Due Date - ' + lease.name, start: nextDueDate.toISOString().split('T')[0], classNames: ['lease-event', 'next-due-date'] },
+                    { title: 'Lease End - ' + lease.name, start: endDate.toISOString().split('T')[0], classNames: ['lease-event', 'lease-end'] }
+                ];
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching calendar lease:', error);
+            return [];
+        });
+    }
+
+    $(document).ready(function() {
+        getLeaseEvents().then(events => {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: events,
+                eventContent: function(arg) {
+                    const { event } = arg;
+                    const customClasses = event.classNames.join(' ');
+                    return {
+                        html: `<div class="${customClasses}">${event.title}</div>`
+                    };
+                }
+            });
+            calendar.render();
+        });
+    });
+
+
+
+
 </script>
 
 {% endblock %}

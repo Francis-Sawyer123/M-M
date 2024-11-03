@@ -524,9 +524,11 @@ def visitorform():
                 minute = visit_time.split(':')[1]    
                 period = "AM" if hour < 12 else "PM"
 
-                # Convert 24-hour time to 12-hour format
                 hour_12 = hour % 12 or 12
                 formatted_time = f"{hour_12}:{minute} {period}"
+            
+                curfew_start = 22
+                curfew_end = 6
 
             print("sa time input")
 
@@ -556,6 +558,10 @@ def visitorform():
             if visit_room not in existing_rooms:
                 flash('This room does not exist', 'danger')
                 return redirect(url_for('visitorform'))
+            
+            if (hour >= curfew_start) or (hour < curfew_end):
+                    flash(f"Unfortunately we don't accept visitors at this time: {formatted_time}", 'warning')
+                    return redirect(url_for('visitorform'))
 
             # Insert the visitor data into the database
             try:

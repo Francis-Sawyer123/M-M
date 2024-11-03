@@ -131,15 +131,15 @@
 
         // Function to delete a visitor
         $(document).on('click', '.delete-visit', function() {
-            const visitId = $(this).data('del'); // Get visit_id from the button
+            const visitId = $(this).data('del'); 
             if (confirm('Are you sure you want to delete this visitor?')) {
                 $.ajax({
                     url: '/admin/Visitor-Engagement/delete', 
                     type: 'POST',
-                    data: { visit_id: visitId }, // Send the visit_id as data
+                    data: { visit_id: visitId },
                     success: function(response) {
                         alert(response.message);
-                        Callvisitors(); // Refresh the visitor list after deletion
+                        Callvisitors();
                     },
                     error: function(xhr, status, error) {
                         console.error('Error deleting visitor:', error);

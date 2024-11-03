@@ -476,7 +476,7 @@ def Admin_Maintenance():
             'filename': mainlist['filename'],
             'maintenancedate': mainlist['maintenancedate'],
             'roomNumber': mainlist['roomNumber'],
-            'status': mainlist['status']  # Ensure the status is fetched correctly
+            'status': mainlist['status']
         } for mainlist in maintenance_raw]
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -507,7 +507,7 @@ def Admin_Maintenance():
             """, (maintain_id,))
             maintenanceconn.commit()
 
-            return jsonify({'message': 'Maintenance record deleted successfully'})  # Return a response
+            return jsonify({'message': 'Maintenance record deleted successfully'})
 
     return render_template("Admin_umaintenance.html", maintenance_list=maintenance_list)
 
@@ -520,22 +520,51 @@ def Admin_lease():
     lease_Exec = lease_con.cursor()
 
     try:
-        # Fetch lease information
-        lease_Exec.execute("""
-            SELECT 
-                li.leaseid, 
-                li.login_id, 
-                li.lease_start, 
-                li.lease_end, 
-                li.monthly, 
-                li.deposite, 
-                li.status, 
-                a.name 
-            FROM 
-                lease_inform li
-            JOIN 
-                apartmentsingup a ON li.login_id = a.userid
+        # Fetch calendar lease data
+        lease_Exec.execute("""SELECT 
+            li.login_id, 
+            li.lease_start, 
+            li.lease_end, 
+            li.monthly, 
+            a.name,
+            DATE_ADD(li.lease_start, INTERVAL (TIMESTAMPDIFF(MONTH, li.lease_start, CURDATE()) + 1) MONTH) AS next_payment_date
+        FROM 
+            lease_inform li 
+        JOIN 
+            apartmentsingup a 
+        ON 
+            li.login_id = a.userid
+        WHERE 
+           CURDATE() < DATE_ADD(li.lease_start, INTERVAL (TIMESTAMPDIFF(MONTH, li.lease_start, CURDATE()) + 1) MONTH) 
+            AND li.lease_end > CURDATE();
         """)
+
+        calendar_display = lease_Exec.fetchall()
+        calendar_show = [{
+            'login_id': calendar['login_id'],
+            'lease_start': calendar['lease_start'].isoformat(),
+            'lease_end': calendar['lease_end'].isoformat(),
+            'monthly': calendar['monthly'],
+            'name': calendar['name'],
+            'next_payment_date': calendar['next_payment_date'].isoformat()
+        } for calendar in calendar_display]
+
+        # Fetch lease information
+        lease_Exec.execute("""SELECT 
+            li.leaseid, 
+            li.login_id, 
+            li.lease_start, 
+            li.lease_end, 
+            li.monthly, 
+            li.deposite, 
+            li.status, 
+            a.name 
+        FROM 
+            lease_inform li
+        JOIN 
+            apartmentsingup a ON li.login_id = a.userid
+        """)
+
         lease_data = lease_Exec.fetchall()
         datalease_show = [
             {
@@ -551,22 +580,22 @@ def Admin_lease():
         ]
 
         # Fetch lease requests with apartment names
-        lease_Exec.execute("""
-            SELECT 
-                lr.leaseRec_id,
-                lr.login_Id, 
-                lr.start_date, 
-                lr.end_date, 
-                lr.Comments, 
-                lr.approval, 
-                a.name 
-            FROM 
-                lease_request lr
-            JOIN 
-                apartmentsingup a ON lr.login_Id = a.userid
-            WHERE 
-                lr.approval = 0  -- Assuming 0 means pending
+        lease_Exec.execute("""SELECT 
+            lr.leaseRec_id,
+            lr.login_Id, 
+            lr.start_date, 
+            lr.end_date, 
+            lr.Comments, 
+            lr.approval, 
+            a.name 
+        FROM 
+            lease_request lr
+        JOIN 
+            apartmentsingup a ON lr.login_Id = a.userid
+        WHERE 
+            lr.approval = 0  -- Assuming 0 means pending
         """)
+
         lease_mail = lease_Exec.fetchall()
         email_recieve = [
             {
@@ -584,17 +613,21 @@ def Admin_lease():
         # Calculate unread count (number of pending lease requests)
         unread_count = len(email_recieve)
 
+        
+
         # Return JSON response for AJAX requests
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify(
-                datalease_show=datalease_show, 
-                email_recieve=email_recieve,
-                unreadCount=unread_count
-            ), 200
+            return jsonify({
+                'calendar_show': calendar_show,
+                'datalease_show': datalease_show, 
+                'email_recieve': email_recieve,
+                'unreadCount': unread_count
+            }), 200
 
         # Render template for standard GET requests
         return render_template(
-            'Admin_lease.html', 
+            'Admin_lease.html',
+            calendar_show=calendar_show, 
             datalease_show=datalease_show, 
             email_recieve=email_recieve
         )
@@ -612,7 +645,7 @@ def Admin_lease():
 def update_approval():
     lease_con = connection_establish()
     lease_Exec = lease_con.cursor()
-    
+
     try:
         data = request.get_json()
         lease_id = data.get('lease_id')
@@ -620,20 +653,24 @@ def update_approval():
         lease_start = data.get('lease_start')
         lease_end = data.get('lease_end')
         action = data.get('action')
-    
+
+        # Check for action types that require these fields
+        monthly_amount = data.get('monthlyAmount')
+        deposit_amount = data.get('depositeAmount')
+
         if action in ['approve', 'decline']:
             # Fetch the lease request to ensure it exists
             lease_Exec.execute("SELECT * FROM lease_request WHERE leaseRec_id = %s", (lease_id,))
             lease_request = lease_Exec.fetchone()
-    
+
             if not lease_request:
                 return jsonify({'error': 'Lease request does not exist.'}), 400
-    
+
             if action == 'approve':
                 # Extract 'monthly' and 'Downpayment' from lease_request
                 monthly = lease_request.get('monthly', 0)
-                downpayment = lease_request.get('Downpayment', 0)  # Ensure correct field name
-                
+                downpayment = lease_request.get('Downpayment', 0) 
+
                 # Insert or update the lease in lease_inform
                 lease_Exec.execute("""
                     INSERT INTO lease_inform (login_id, lease_start, lease_end, monthly, deposite, status) 
@@ -645,30 +682,43 @@ def update_approval():
                         deposite = VALUES(deposite),
                         status = VALUES(status)
                 """, (lease_request['login_Id'], lease_start, lease_end, monthly, downpayment, 'Approved'))
-    
-            # Delete the lease request after processing
-            lease_Exec.execute("DELETE FROM lease_request WHERE leaseRec_id = %s", (lease_id,))
-    
-            lease_con.commit()
-            return jsonify({"message": "Lease request processed successfully."}), 200
-    
+
+                # Delete the lease request after processing
+                lease_Exec.execute("DELETE FROM lease_request WHERE leaseRec_id = %s", (lease_id,))
+                lease_con.commit()
+                return jsonify({"message": "Lease request processed successfully."}), 200
+
         elif action == 'delete-lease':
             # Delete the lease from lease_inform
             lease_Exec.execute("DELETE FROM lease_inform WHERE leaseid = %s", (lease_id,))
             lease_con.commit()
             return jsonify({"message": "Lease deleted successfully."}), 200
-    
+        
+        elif action == "update-payment":
+            # Check if monthly_amount and deposit_amount are provided
+            if monthly_amount is None or deposit_amount is None:
+                return jsonify({'error': 'Monthly amount and deposit amount are required.'}), 400
+            
+            lease_Exec.execute("""
+                UPDATE lease_inform 
+                SET monthly = %s, deposite = %s 
+                WHERE leaseid = %s
+            """, (monthly_amount, deposit_amount, lease_id))
+            lease_con.commit()
+            return jsonify({"message": "Lease updated successfully."}), 200
+        
         else:
             return jsonify({'error': 'Invalid action specified.'}), 400
-    
+
     except Exception as e:
         lease_con.rollback()
-        print(f'Error in update_approval: {str(e)}')  # Log the error for debugging
+        print(f'Error in update_approval: {str(e)}')
         return jsonify({'error': 'Internal Server Error'}), 500
-    
+
     finally:
         lease_Exec.close()
         lease_con.close()
+
 
 
 
@@ -713,7 +763,7 @@ def Admin_Emergency():
 
                 exec_emergency.execute(
                     "INSERT INTO emergency_records (disaster, happen_date, Unitroom, description, status_completion) VALUES (%s, %s, %s, %s, %s)",
-                    (disaster, happen_date, unitroom, description, 'Pending')  # Default status
+                    (disaster, happen_date, unitroom, description, 'Pending')
                 )
                 emergency_conn.commit()
                 return jsonify({'message': 'Added new emergency record.'}), 200
@@ -801,7 +851,7 @@ def delete_visitor():
     visit_id = request.form.get('visit_id')
     try:
         exec_visitors.execute("DELETE FROM visitors_apartment WHERE visit_id = %s", (visit_id,))
-        visitor_conn.commit()  # Commit the change to the database
+        visitor_conn.commit()
         return jsonify({'message': 'Visitor deleted successfully.'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
